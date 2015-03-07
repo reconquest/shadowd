@@ -45,7 +45,3 @@ func main() {
 func handleCertificateGenerate(map[string]interface{}) error {
 	return nil
 }
-
-func handleListen(map[string]interface{}) error {
-	return nil
-}

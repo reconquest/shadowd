@@ -25,6 +25,11 @@ func handleTableGenerate(args map[string]interface{}) error {
 		hashTablesDir = args["-d"].(string)
 	)
 
+	err := validateTablesDirPermissions(hashTablesDir)
+	if err != nil {
+		return err
+	}
+
 	amount, err := strconv.Atoi(amountString)
 	if err != nil {
 		return err
@@ -84,4 +89,20 @@ func generateShaSalt() string {
 	}
 
 	return string(salt)
+}
+
+func validateTablesDirPermissions(path string) error {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+
+	if stat.Mode()&0077 != 0 {
+		return fmt.Errorf(
+			"hash tables dir is too open: %s "+
+				"(should be accessible only by owner)",
+			stat.Mode())
+	}
+
+	return nil
 }
