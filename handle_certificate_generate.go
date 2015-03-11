@@ -15,7 +15,7 @@ import (
 )
 
 func handleCertificateGenerate(args map[string]interface{}) error {
-	rsaBlockSize, err := strconv.Atoi(args["-s"].(string))
+	rsaBlockSize, err := strconv.Atoi(args["-b"].(string))
 	if err != nil {
 		return err
 	}
@@ -25,7 +25,7 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		return fmt.Errorf("Failed to generate private key: %s", err)
 	}
 
-	validDuration, err := time.ParseDuration(args["-d"].(string))
+	validDuration, err := time.ParseDuration(args["-t"].(string))
 	if err != nil {
 		return err
 	}
@@ -39,35 +39,33 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		return fmt.Errorf("Failed to generate serial number: %s", err)
 	}
 
-	certicate := x509.Certificate{
-		SerialNumber:          serialNumber,
-		Subject:               pkix.Name{},
-		NotBefore:             validNotBefore,
-		NotAfter:              validNotAfter,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		BasicConstraintsValid: true,
-	}
+	cert := x509.Certificate{
+		IsCA: true,
 
-	hosts := args["-h"].([]string)
-	certicate.DNSNames = hosts
+		Subject:      pkix.Name{},
+		SerialNumber: serialNumber,
+
+		NotBefore: validNotBefore,
+		NotAfter:  validNotAfter,
+
+		BasicConstraintsValid: true,
+		KeyUsage: x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature |
+			x509.KeyUsageCertSign,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+
+		DNSNames: args["-h"].([]string),
+	}
 
 	addrs := args["-i"].([]string)
 	for _, addr := range addrs {
 		if ip := net.ParseIP(addr); ip != nil {
-			certicate.IPAddresses = append(certicate.IPAddresses, ip)
+			cert.IPAddresses = append(cert.IPAddresses, ip)
 		}
 
 	}
 
-	keyUsage := x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature
-	if args["-ca"].(bool) {
-		certicate.IsCA = true
-		keyUsage |= x509.KeyUsageCertSign
-	}
-	certicate.KeyUsage = keyUsage
-
-	certBytes, err := x509.CreateCertificate(
-		rand.Reader, &certicate, &certicate, &privateKey.PublicKey, privateKey,
+	certData, err := x509.CreateCertificate(
+		rand.Reader, &cert, &cert, &privateKey.PublicKey, privateKey,
 	)
 	if err != nil {
 		return fmt.Errorf("Failed to create certificate: %s", err)
@@ -82,7 +80,7 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		certOutFd,
 		&pem.Block{
 			Type:  "CERTIFICATE",
-			Bytes: certBytes,
+			Bytes: certData,
 		},
 	)
 	if err != nil {

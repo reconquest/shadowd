@@ -11,7 +11,7 @@ const usage = `shadowd, secure login distribution service
 Usage:
   shadowd [options]
   shadowd [options] -G <token> <password> [-n <amount>] [-a <algo>]
-  shadowd [options] -C [-f] (-h <host>... | -i <addr>...) [-s <amount>] [-d <duration>]
+  shadowd [options] -C [-f] (-h <host>... | -i <addr>...) [-b <amount>] [-t <duration>]
   shadowd -h | --help
 
 Options:
@@ -20,11 +20,11 @@ Options:
       -a <algo>    Use specified algorithm [default: sha256].
   -C  Generate certificate pair for authenticating via HTTPS.
       -f  Do not ask, overwrite existing certificate.
-	  -s <amount>   Generate rsa key of specified length
+	  -b <amount>   Generate rsa key of specified length
 				    [default: 2048].
 	  -h <host>     Set specified host as verified verified.
 	  -i <addr>     Set specified ip address as verified.
-	  -d <duration> Set specified valid duration (hours).
+	  -t <duration> Set specified valid duration.
 
   -d <table_dir>  Use specified dir for storing and reading hash-tables
                   [default: /var/shadowd/ht/].
