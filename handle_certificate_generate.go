@@ -11,10 +11,12 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
 func handleCertificateGenerate(args map[string]interface{}) error {
+	certDir := strings.TrimRight(args["-c"].(string), "/") + "/"
 	rsaBlockSize, err := strconv.Atoi(args["-b"].(string))
 	if err != nil {
 		return err
@@ -25,7 +27,7 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		return fmt.Errorf("Failed to generate private key: %s", err)
 	}
 
-	validDuration, err := time.ParseDuration(args["-t"].(string))
+	validDuration, err := time.ParseDuration(args["-d"].(string))
 	if err != nil {
 		return err
 	}
@@ -71,7 +73,7 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		return fmt.Errorf("Failed to create certificate: %s", err)
 	}
 
-	certOutFd, err := os.Create("cert.pem")
+	certOutFd, err := os.Create(certDir + "cert.pem")
 	if err != nil {
 		return fmt.Errorf("Failed to create cert file: %s", err)
 	}
@@ -93,7 +95,7 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 	}
 
 	keyOutFd, err := os.OpenFile(
-		"key.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600,
+		certDir+"key.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600,
 	)
 	if err != nil {
 		return fmt.Errorf("Failed to create key file: %s", err)

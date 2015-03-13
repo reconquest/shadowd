@@ -106,7 +106,7 @@ func OpenHashTable(path string, grain time.Duration) (*HashTable, error) {
 
 func handleListen(args map[string]interface{}) error {
 	var (
-		hashTablesDir = args["-d"].(string)
+		hashTablesDir = args["-t"].(string)
 	)
 
 	http.Handle("/t/", &HashTableHandler{
