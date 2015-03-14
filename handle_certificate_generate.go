@@ -24,21 +24,20 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 
 	privateKey, err := rsa.GenerateKey(rand.Reader, rsaBlockSize)
 	if err != nil {
-		return fmt.Errorf("Failed to generate private key: %s", err)
+		return fmt.Errorf("failed to generate private key: %s", err)
 	}
 
-	validDuration, err := time.ParseDuration(args["-d"].(string))
+	invalidAfter, err := time.Parse("2006-02-01", args["-t"].(string))
 	if err != nil {
 		return err
 	}
 
-	validNotBefore := time.Now()
-	validNotAfter := validNotBefore.Add(validDuration)
+	invalidBefore := time.Now()
 
-	serialNumberBlockSize := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumberBlockSize := big.NewInt(0).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberBlockSize)
 	if err != nil {
-		return fmt.Errorf("Failed to generate serial number: %s", err)
+		return fmt.Errorf("failed to generate serial number: %s", err)
 	}
 
 	cert := x509.Certificate{
@@ -47,11 +46,12 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		Subject:      pkix.Name{},
 		SerialNumber: serialNumber,
 
-		NotBefore: validNotBefore,
-		NotAfter:  validNotAfter,
+		NotBefore: invalidBefore,
+		NotAfter:  invalidAfter,
 
 		BasicConstraintsValid: true,
-		KeyUsage: x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature |
+		KeyUsage: x509.KeyUsageKeyEncipherment |
+			x509.KeyUsageDigitalSignature |
 			x509.KeyUsageCertSign,
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 
@@ -70,12 +70,12 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		rand.Reader, &cert, &cert, &privateKey.PublicKey, privateKey,
 	)
 	if err != nil {
-		return fmt.Errorf("Failed to create certificate: %s", err)
+		return fmt.Errorf("failed to create certificate: %s", err)
 	}
 
 	certOutFd, err := os.Create(certDir + "cert.pem")
 	if err != nil {
-		return fmt.Errorf("Failed to create cert file: %s", err)
+		return fmt.Errorf("failed to create cert file: %s", err)
 	}
 
 	err = pem.Encode(
@@ -86,19 +86,19 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("Failed to write to cert file: %s", err)
+		return fmt.Errorf("failed to write to cert file: %s", err)
 	}
 
 	err = certOutFd.Close()
 	if err != nil {
-		return fmt.Errorf("Failed to close cert file: %s", err)
+		return fmt.Errorf("failed to close cert file: %s", err)
 	}
 
 	keyOutFd, err := os.OpenFile(
 		certDir+"key.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600,
 	)
 	if err != nil {
-		return fmt.Errorf("Failed to create key file: %s", err)
+		return fmt.Errorf("failed to create key file: %s", err)
 	}
 
 	err = pem.Encode(
@@ -109,12 +109,12 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("Failed to write to key file: %s", err)
+		return fmt.Errorf("failed to write to key file: %s", err)
 	}
 
 	err = keyOutFd.Close()
 	if err != nil {
-		return fmt.Errorf("Failed to close key file: %s", err)
+		return fmt.Errorf("failed to close key file: %s", err)
 	}
 
 	return nil
