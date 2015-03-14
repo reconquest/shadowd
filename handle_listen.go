@@ -106,7 +106,8 @@ func OpenHashTable(path string, grain time.Duration) (*HashTable, error) {
 
 func handleListen(args map[string]interface{}) error {
 	var (
-		hashTablesDir = args["-d"].(string)
+		hashTablesDir = args["-t"].(string)
+		certDir       = strings.TrimRight(args["-c"].(string), "/") + "/"
 	)
 
 	http.Handle("/t/", &HashTableHandler{
@@ -115,7 +116,9 @@ func handleListen(args map[string]interface{}) error {
 		RecentClientsTTL: time.Minute,
 	})
 
-	return http.ListenAndServe(":8080", nil)
+	return http.ListenAndServeTLS(
+		":8080", certDir+"cert.pem", certDir+"key.pem", nil,
+	)
 }
 
 func (handler *HashTableHandler) ServeHTTP(

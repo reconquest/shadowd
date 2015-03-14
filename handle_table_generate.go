@@ -22,7 +22,7 @@ func handleTableGenerate(args map[string]interface{}) error {
 		password      = args["<password>"].(string)
 		amountString  = args["-n"].(string)
 		algorithm     = args["-a"].(string)
-		hashTablesDir = args["-d"].(string)
+		hashTablesDir = args["-t"].(string)
 	)
 
 	err := validateTablesDirPermissions(hashTablesDir)
