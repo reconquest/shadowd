@@ -14,7 +14,7 @@ import (
 const usage = `shadowd, secure login distribution service
 
 Usage:
-  shadowd [options]
+  shadowd [options] [-l <listen>]
   shadowd [options] -G <token> <password> [-n <amount>] [-a <algo>]
   shadowd [options] -C [-h <host>...] [-i <address>...] [-d <duration>] [-b <bytes>]
   shadowd -h | --help
@@ -27,11 +27,12 @@ Options:
       -b <bytes>     Generate rsa key of specified length [default: 2048].
       -h <host>      Set specified host as verified [default: $CERT_HOST].
       -i <address>   Set specified ip address as verified [default: $CERT_ADDR].
-      -t <till>      Set time certificate valid till [default: $CERT_VALID].
+      -d <till>      Set time certificate valid till [default: $CERT_VALID].
   -t <table_dir>     Use specified dir for storing and reading hash-tables
                      [default: /var/shadowd/ht/].
   -c <cert_dir>      Use specified dir for storing and reading certificates
-                     [default: /var/shadowd/cert/].`
+                     [default: /var/shadowd/cert/].
+  -l <listen>        Listen specified IP and port [default: :8080].`
 
 func main() {
 	args, _ := docopt.Parse(
@@ -109,5 +110,5 @@ func getLocalIpAddress() string {
 
 	}
 
-	return ""
+	return "127.0.0.1"
 }

@@ -27,7 +27,7 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		return fmt.Errorf("failed to generate private key: %s", err)
 	}
 
-	invalidAfter, err := time.Parse("2006-02-01", args["-t"].(string))
+	invalidAfter, err := time.Parse("2006-02-01", args["-d"].(string))
 	if err != nil {
 		return err
 	}

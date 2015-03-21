@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"net/http"
 	"os"
@@ -116,9 +117,30 @@ func handleListen(args map[string]interface{}) error {
 		RecentClientsTTL: time.Minute,
 	})
 
-	return http.ListenAndServeTLS(
-		":8080", certDir+"cert.pem", certDir+"key.pem", nil,
+	var (
+		certFile = filepath.Join(certDir, "cert.pem")
+		keyFile  = filepath.Join(certDir, "key.pem")
 	)
+
+	certExist := true
+	if _, err := os.Stat(certFile); os.IsNotExist(err) {
+		certExist = false
+	}
+
+	if _, err := os.Stat(keyFile); os.IsNotExist(err) {
+		certExist = false
+	}
+
+	if !certExist {
+		log.Println("no certificate found, generating with default settings")
+		err := handleCertificateGenerate(args)
+		if err != nil {
+			return err
+		}
+	}
+
+	log.Println("starting listening on", args["-l"].(string))
+	return http.ListenAndServeTLS(args["-l"].(string), certFile, keyFile, nil)
 }
 
 func (handler *HashTableHandler) ServeHTTP(
