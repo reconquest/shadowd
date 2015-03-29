@@ -21,7 +21,7 @@ type HashTable struct {
 }
 
 func (table HashTable) GetRecord(number int64) ([]byte, error) {
-	if number > table.Count {
+	if number >= table.Count {
 		return nil, errors.New("record number is out of range")
 	}
 
