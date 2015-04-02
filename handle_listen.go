@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -21,7 +22,7 @@ type HashTable struct {
 }
 
 func (table HashTable) GetRecord(number int64) ([]byte, error) {
-	if number > table.Count {
+	if number >= table.Count {
 		return nil, errors.New("record number is out of range")
 	}
 
@@ -147,6 +148,8 @@ func (handler *HashTableHandler) ServeHTTP(
 	w http.ResponseWriter, r *http.Request,
 ) {
 	prefix := strings.TrimPrefix(r.URL.Path, "/t/")
+	prefix = path.Base(prefix) // preventing read arbitrary file
+
 	table, err := OpenHashTable(
 		filepath.Join(handler.Dir, prefix),
 		handler.RecentClientsTTL,
