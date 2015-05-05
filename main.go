@@ -16,7 +16,7 @@ const usage = `shadowd, secure login distribution service
 Usage:
   shadowd [options] [-l <listen>]
   shadowd [options] -G <token> <password> [-n <amount>] [-a <algo>]
-  shadowd [options] -C [-h <host>...] [-i <address>...] [-d <duration>] [-b <bytes>]
+  shadowd [options] -C [-h <host>...] [-i <address>...] [-d <till>] [-b <bytes>]
   shadowd -h | --help
 
 Options:
@@ -36,8 +36,7 @@ Options:
 
 func main() {
 	args, _ := docopt.Parse(
-		replaceDefaults(usage), nil, true, "shadowd 1.0",
-		false,
+		replaceDefaults(usage), nil, true, "shadowd 1.0", false,
 	)
 
 	var err error
