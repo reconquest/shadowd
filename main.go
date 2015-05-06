@@ -25,8 +25,8 @@ Options:
       -a <algo>      Use specified algorithm [default: sha256].
   -C  Generate certificate pair for authenticating via HTTPS.
       -b <bytes>     Generate rsa key of specified length [default: 2048].
-      -h <host>      Set specified host as verified [default: $CERT_HOST].
-      -i <address>   Set specified ip address as verified [default: $CERT_ADDR].
+      -h <host>      Set specified host as trusted [default: $CERT_HOST].
+      -i <address>   Set specified ip address as trusted [default: $CERT_ADDR].
       -d <till>      Set time certificate valid till [default: $CERT_VALID].
   -t <table_dir>     Use specified dir for storing and reading hash-tables
                      [default: /var/shadowd/ht/].
