@@ -1,14 +1,14 @@
 # shadowd
 
 **shadowd** it is the secure login distribution service, which consists of two
-parrts, server and client.
+parts, server and client.
 
 In a typical server configuration case, you should manually update the
-/etc/shadow and copy it on all servers, and all servers will have same hash in
-the /etc/shadow, afterwards all servers will be have same password hashes in the
-/etc/shadowd. Assume attacker successfully gained access to one of your servers
-and found collision to your hash, so afterwards *attacker cat get access to all
-of your servers*.
+/etc/shadow and copy it on all servers, and every servers will have same hash in
+the /etc/shadow, afterwards all servers will have same password hashes in the
+/etc/shadowd. Supposed that attacker successfully gained access to one of your servers
+and found collision to that single hash, so afterwards *attacker actually got access to
+all servers with that hash*.
 
 **shadowd** is summoned to solve this obscure problem.
 
@@ -36,15 +36,15 @@ can be used via `-a sha512` flag.
 ### SSL certificates
 
 Assume attacker gained access to your servers, he can wait for next
-password update and do man-in-the-midddle attack, afterwards passwords on
+password update and do man-in-the-middle attack, afterwards passwords on
 servers will be changed on him password and get more access to the servers.
 
-For solve this problem should use SSL certificates, which confirm the
-authority of login distribution server.
+For solving that problem one should use SSL certificates, which confirms
+authority of the login distribution server.
 
 For generating SSL certificates you should have trusted host (shadowd server
-dnsname) or trusted ip address, if you will use localhost for shadowd
-server, you can skip this step and shadowd automatic specify current
+DNS name) or trusted ip address, if you will use localhost for shadowd
+server, you can skip this step and shadowd will automatically specify current
 hostname and ip address as trusted, in other cases you should pass options for
 setting trusted hosts/addresses of shadowd.
 
@@ -61,18 +61,14 @@ And for all of this you should run one command:
 shadowd [options] -C [-h <host>...] [-i <address>...]
 ```
 
-Afterwards, `cert.pem`, `private.key` and `public.key` will be saved in
+Afterwards, `cert.pem` and `key.pem` will be stored in
 `/var/shadowd/cert/` directory, which location can be changed through flag
 `-c <cert_dir>`.
 
-And finally what you should do it's start shadowd server, as mentioned earlier,
-shadowd is used REST API, by default listening address is `:8080`, so you can
-set specified address and port through adding argument `-l <listen>`.
-
 ### Start shadowd
 
-As mentioned earlier, shadowd uses REST API, by default listening address is
-`:8080`, but you can set specified address and port through passing argument
+As mentioned earlier, shadowd uses REST API, by default listening on `:8080`,
+but you can set specified address and port through passing argument
 `-l <listen>`:
 
 ```
