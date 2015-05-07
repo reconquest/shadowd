@@ -1,0 +1,9 @@
+[Unit]
+Description=Secure login distribution service
+
+[Service]
+ExecStart=/usr/bin/shadowd
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
