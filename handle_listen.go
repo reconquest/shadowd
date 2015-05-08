@@ -112,7 +112,7 @@ func handleListen(args map[string]interface{}) error {
 		certDir       = strings.TrimRight(args["-c"].(string), "/") + "/"
 	)
 
-	hashTTL, err := time.ParseDuration(args["-a"].(string))
+	hashTTL, err := time.ParseDuration(args["-s"].(string))
 	if err != nil {
 		return err
 	}
