@@ -14,7 +14,7 @@ import (
 const usage = `shadowd, secure login distribution service
 
 Usage:
-  shadowd [options] [-l <listen>]
+  shadowd [options] [-L <listen>] [-a <hash_ttl>]
   shadowd [options] -G <token> <password> [-n <amount>] [-a <algo>]
   shadowd [options] -C [-h <host>...] [-i <address>...] [-d <till>] [-b <bytes>]
   shadowd -h | --help
@@ -32,7 +32,9 @@ Options:
                      [default: /var/shadowd/ht/].
   -c <cert_dir>      Use specified dir for storing and reading certificates
                      [default: /var/shadowd/cert/].
-  -l <listen>        Listen specified IP and port [default: :8080].`
+  -L <listen>        Listen specified IP and port [default: :8080].
+      -a <hash_ttl>  Use specified time duration as hash TTL [default: 24h].
+`
 
 func main() {
 	args, _ := docopt.Parse(
