@@ -15,10 +15,10 @@ import (
 )
 
 type HashTable struct {
-	Count           int64
-	RecordSize      int
-	File            *os.File
-	TimeOffsetGrain time.Duration
+	Count      int64
+	RecordSize int
+	File       *os.File
+	HashTTL    time.Duration
 }
 
 func (table HashTable) GetRecord(number int64) ([]byte, error) {
@@ -43,7 +43,7 @@ func (table HashTable) GetRecord(number int64) ([]byte, error) {
 
 func (table HashTable) GetRecordByHashedString(input string) ([]byte, error) {
 	hash := sha256.Sum256([]byte(
-		fmt.Sprintf("%s%d", input, table.getTimeOffset())),
+		fmt.Sprintf("%s%d", input, table.getTimeHashPart())),
 	)
 
 	hashMaxLength := int64(1)
@@ -65,17 +65,17 @@ func (table HashTable) GetRecordByHashedString(input string) ([]byte, error) {
 	return table.GetRecord(remainder)
 }
 
-func (table HashTable) getTimeOffset() int64 {
-	return time.Now().Unix() / int64(table.TimeOffsetGrain/time.Second)
+func (table HashTable) getTimeHashPart() int64 {
+	return time.Now().Unix() / int64(table.HashTTL/time.Second)
 }
 
 type HashTableHandler struct {
-	Dir              string
-	RecentClients    map[string]time.Time
-	RecentClientsTTL time.Duration
+	Dir           string
+	RecentClients map[string]time.Time
+	HashTTL       time.Duration
 }
 
-func OpenHashTable(path string, grain time.Duration) (*HashTable, error) {
+func OpenHashTable(path string, hashTTL time.Duration) (*HashTable, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -97,10 +97,10 @@ func OpenHashTable(path string, grain time.Duration) (*HashTable, error) {
 	count := stat.Size() / int64(recordSize)
 
 	table := &HashTable{
-		Count:           count,
-		RecordSize:      recordSize,
-		File:            file,
-		TimeOffsetGrain: grain,
+		Count:      count,
+		RecordSize: recordSize,
+		File:       file,
+		HashTTL:    hashTTL,
 	}
 
 	return table, nil
@@ -112,10 +112,15 @@ func handleListen(args map[string]interface{}) error {
 		certDir       = strings.TrimRight(args["-c"].(string), "/") + "/"
 	)
 
+	hashTTL, err := time.ParseDuration(args["-a"].(string))
+	if err != nil {
+		return err
+	}
+
 	http.Handle("/t/", &HashTableHandler{
-		Dir:              hashTablesDir,
-		RecentClients:    map[string]time.Time{},
-		RecentClientsTTL: time.Minute,
+		Dir:           hashTablesDir,
+		RecentClients: map[string]time.Time{},
+		HashTTL:       hashTTL,
 	})
 
 	var (
@@ -140,8 +145,8 @@ func handleListen(args map[string]interface{}) error {
 		}
 	}
 
-	log.Println("starting listening on", args["-l"].(string))
-	return http.ListenAndServeTLS(args["-l"].(string), certFile, keyFile, nil)
+	log.Println("starting listening on", args["-L"].(string))
+	return http.ListenAndServeTLS(args["-L"].(string), certFile, keyFile, nil)
 }
 
 func (handler *HashTableHandler) ServeHTTP(
@@ -152,7 +157,7 @@ func (handler *HashTableHandler) ServeHTTP(
 
 	table, err := OpenHashTable(
 		filepath.Join(handler.Dir, prefix),
-		handler.RecentClientsTTL,
+		handler.HashTTL,
 	)
 
 	if err != nil {
@@ -164,8 +169,8 @@ func (handler *HashTableHandler) ServeHTTP(
 
 	clientIp := r.RemoteAddr[:strings.LastIndex(r.RemoteAddr, ":")]
 
-	// in case of client requested shadow entry not to long ago,
-	// we should send different entry on further invokations
+	// in case of client requested shadow entry not too long ago,
+	// we should send different entry on further invocations
 	if _, ok := handler.RecentClients[clientIp]; ok {
 		clientIp += "-next"
 	} else {
@@ -187,7 +192,7 @@ func (handler *HashTableHandler) CleanupRecentClients() {
 	actualClients := map[string]time.Time{}
 
 	for ip, requestTime := range handler.RecentClients {
-		if time.Now().Sub(requestTime) > handler.RecentClientsTTL {
+		if time.Now().Sub(requestTime) > handler.HashTTL {
 			continue
 		}
 
