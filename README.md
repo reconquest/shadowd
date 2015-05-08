@@ -17,7 +17,7 @@ hash.
 If attacker gained user access to server and try to repeat request to
 shadowd server and get actual hash during the hash TTL period (one day by
 default), then shadowd will give him another unique hash entry. Actually,
-*shadowd* can give only two unique hash entries for hash TTL period for one
+**shadowd** can give only two unique hash entries for hash TTL period for one
 client, first hash entry may be received only for first request per hash TTL
 period, in all later requests will received another hash.
 
