@@ -36,10 +36,11 @@ REST API is used for communication between server and client.
 
 For generating hash table you should run:
 ```
-shadowd [options] -G <login> <password>
+shadowd [options] -G <login>
 ```
-**shadowd** will generate hash table with 2048 hashed entries of specified
-password, hash table size can be specified via flag
+**shadowd** will prompt for a password for specified user, and after that will
+generate hash table with 2048 hashed entries of specified password, hash table
+size can be specified via flag
 `-n <amount>` `sha256` will be used as default hashing algorithm, but `sha512`
 can be used via `-a sha512` flag.
 
