@@ -4,11 +4,10 @@
 parts, server and client.
 
 In a typical server configuration case, you should manually update the
-`/etc/shadow` and copy it on all servers, and every servers will have same hash in
-the `/etc/shadow`, afterwards all servers will have same password hashes in the
-`/etc/shadow`. Supposed that attacker successfully gained access to one of your
-servers and found collision to that single hash, so afterwards *attacker
-actually got access to all servers with that hash*.
+`/etc/shadow` and copy it on all servers, afterwards every servers will have
+same hash in the `/etc/shadow`. Supposed that attacker successfully gained
+access to one of your servers and found collision to that single hash, so
+afterwards *attacker actually got access to all servers with that hash*.
 
 **shadowd solution** is to generate hash tables of specified passwords mixed
 with random salt for specified users and guarantee that a client receive unique
