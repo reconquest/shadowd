@@ -1,5 +1,5 @@
 pkgname=shadowd
-pkgver=13.2bff29d
+pkgver=22.39f9d22
 pkgrel=1
 pkgdesc="Secure login distribution service"
 url="https://github.com/reconquest/shadowd"
