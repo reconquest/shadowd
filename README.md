@@ -75,6 +75,9 @@ Afterwards, `cert.pem` and `key.pem` will be stored in
 `/var/shadowd/cert/` directory, which location can be changed through flag
 `-c <cert_dir>`.
 
+Since client needs certificate, you should copy `cert.pem` on
+server with client to `/etc/shadowc/cert.pem`.
+
 ### Start shadowd
 
 As mentioned earlier, shadowd uses REST API, by default listening on `:8080`,
@@ -98,4 +101,4 @@ default hash TTL is `24h`.
 
 Success, you have configured server, but you need to configure client, for this
 you should see
-[documentation here](https://github.com/reconquest/shadowc/README.md).
+[documentation here](https://github.com/reconquest/shadowc).
