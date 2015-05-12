@@ -17,7 +17,7 @@ import (
 // #include <crypt.h>
 import "C"
 
-type AlgorithmImplementation func(login, password string) string
+type AlgorithmImplementation func(token string) string
 
 func handleTableGenerate(args map[string]interface{}) error {
 	var (
@@ -25,6 +25,7 @@ func handleTableGenerate(args map[string]interface{}) error {
 		amountString  = args["-n"].(string)
 		algorithm     = args["-a"].(string)
 		hashTablesDir = args["-t"].(string)
+		pool          = args["-p"].(string)
 	)
 
 	password, err := getPassword("Enter password: ")
@@ -47,7 +48,7 @@ func handleTableGenerate(args map[string]interface{}) error {
 		return errors.New("specified algorithm is not available")
 	}
 
-	file, err := os.Create(filepath.Join(hashTablesDir, login))
+	file, err := os.Create(filepath.Join(hashTablesDir, login + ":" + pool))
 	if err != nil {
 		return err
 	}
@@ -55,7 +56,7 @@ func handleTableGenerate(args map[string]interface{}) error {
 	defer file.Close()
 
 	for i := 0; i < amount; i++ {
-		fmt.Fprintln(file, implementation(login, password))
+		fmt.Fprintln(file, implementation(password))
 	}
 
 	return nil
@@ -76,14 +77,14 @@ func makeShadowFileRecord(salt, hash string, algorithmId int) string {
 	return fmt.Sprintf("$%d$%s$%s", algorithmId, salt, hash)
 }
 
-func generateSha256(login, password string) string {
+func generateSha256(token string) string {
 	shadowRecord := fmt.Sprintf("$5$%s", generateShaSalt())
-	return C.GoString(C.crypt(C.CString(password), C.CString(shadowRecord)))
+	return C.GoString(C.crypt(C.CString(token), C.CString(shadowRecord)))
 }
 
-func generateSha512(login, password string) string {
+func generateSha512(token string) string {
 	shadowRecord := fmt.Sprintf("$6$%s", generateShaSalt())
-	return C.GoString(C.crypt(C.CString(password), C.CString(shadowRecord)))
+	return C.GoString(C.crypt(C.CString(token), C.CString(shadowRecord)))
 }
 
 func generateShaSalt() string {

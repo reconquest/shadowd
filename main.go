@@ -15,7 +15,7 @@ const usage = `shadowd, secure login distribution service
 
 Usage:
   shadowd [options] [-L <listen>] [-s <hash_ttl>]
-  shadowd [options] -G <login> [-n <amount>] [-a <algo>]
+  shadowd [options] -G <login> [-p <pool>] [-n <amount>] [-a <algo>]
   shadowd [options] -C [-h <host>...] [-i <address>...] [-d <till>] [-b <bytes>]
   shadowd -h | --help
 
@@ -24,13 +24,14 @@ Options:
       readed from stdin.
        -n <amount>    Generate hash-table of specified length [default: 2048].
        -a <algo>      Use specified algorithm [default: sha256].
+       -p <pool>      Set specified pool name [default: main].
   -C  Generate certificate pair for authenticating via HTTPS.
        -b <bytes>     Generate rsa key of specified length [default: 2048].
        -h <host>      Set specified host as trusted [default: $CERT_HOST].
        -i <address>   Set specified ip address as trusted [default: $CERT_ADDR].
        -d <till>      Set time certificate valid till [default: $CERT_VALID].
   -L <listen>         Listen specified IP and port [default: :8080].
-	   -s <hash_ttl>  Use specified time duration as hash TTL [default: 24h].
+      -s <hash_ttl>   Use specified time duration as hash TTL [default: 24h].
   -t <table_dir>      Use specified dir for storing and reading hash-tables
                       [default: /var/shadowd/ht/].
   -c <cert_dir>       Use specified dir for storing and reading certificates

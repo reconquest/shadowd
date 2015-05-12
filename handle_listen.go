@@ -8,7 +8,6 @@ import (
 	"math/big"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -152,11 +151,23 @@ func handleListen(args map[string]interface{}) error {
 func (handler *HashTableHandler) ServeHTTP(
 	w http.ResponseWriter, r *http.Request,
 ) {
-	prefix := strings.TrimPrefix(r.URL.Path, "/t/")
-	prefix = path.Base(prefix) // preventing read arbitrary file
+	requestPath := strings.TrimPrefix(r.URL.Path, "/t/")
+	requestPathPieces := strings.Split(requestPath, "/")
+
+	if len(requestPathPieces) > 2 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	login := requestPathPieces[0]
+
+	pool := "main"
+	if len(requestPathPieces) == 2 && requestPathPieces[1] != "" {
+		pool = requestPathPieces[1]
+	}
 
 	table, err := OpenHashTable(
-		filepath.Join(handler.Dir, prefix),
+		filepath.Join(handler.Dir, login+":"+pool),
 		handler.HashTTL,
 	)
 

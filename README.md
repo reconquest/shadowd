@@ -44,6 +44,10 @@ size can be specified via flag
 `-n <amount>` `sha256` will be used as default hashing algorithm, but `sha512`
 can be used via `-a sha512` flag.
 
+If you want use several passwords for one user, then you should generate other
+hash-tables with another pool name, which you should specify via `-p <pool>`
+argument. By default **shadowd** uses `main` pool.
+
 ### SSL certificates
 
 Assume attacker gained access to your servers, he can wait for next
