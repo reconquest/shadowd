@@ -77,10 +77,6 @@ func getAlgorithmImplementation(algorithm string) AlgorithmImplementation {
 	return nil
 }
 
-func makeShadowFileRecord(salt, hash string, algorithmId int) string {
-	return fmt.Sprintf("$%d$%s$%s", algorithmId, salt, hash)
-}
-
 func generateSha256(password string) string {
 	shadowRecord := fmt.Sprintf("$5$%s", generateShaSalt())
 	return C.GoString(C.crypt(C.CString(password), C.CString(shadowRecord)))
