@@ -38,15 +38,14 @@ For generating hash table you should run:
 ```
 shadowd [options] -G <token>
 ```
-**shadowd** will prompt for a password for specified user token, and after that will
-generate hash table with 2048 hashed entries of specified password, hash table
-size can be specified via flag
-`-n <amount>` `sha256` will be used as default hashing algorithm, but `sha512`
-can be used via `-a sha512` flag.
+**shadowd** will prompt for a password for specified user token, and after that
+will generate hash table with 2048 hashed entries of specified password, hash
+table size can be specified via flag `-n <amount>` `sha256` will be used as
+default hashing algorithm, but `sha512` can be used via `-a sha512` flag.
 
-Actually, user token can be same as login, but if you want use several passwords
-for one user on any other servers, you should specify `<token>` as
-`<pool>/<login>` where `<pool>` it is name of role (`production` or `testing`
+Actually, user token can be same as login, but if you want to use several
+passwords for same username on different servers, you should specify `<token>`
+as `<pool>/<login>` where `<pool>` it is name of role (`production` or `testing`
 for example).
 
 ### SSL certificates

@@ -151,7 +151,7 @@ func handleListen(args map[string]interface{}) error {
 func (handler *HashTableHandler) ServeHTTP(
 	w http.ResponseWriter, r *http.Request,
 ) {
-	// does not need validate token because 'http' package will validate request
+	// no need to validate token because 'http' package will validate request
 	// uri and remove '../' partitions.
 	token := strings.TrimPrefix(r.URL.Path, "/t/")
 
