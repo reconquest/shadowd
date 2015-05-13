@@ -151,23 +151,12 @@ func handleListen(args map[string]interface{}) error {
 func (handler *HashTableHandler) ServeHTTP(
 	w http.ResponseWriter, r *http.Request,
 ) {
-	requestPath := strings.TrimPrefix(r.URL.Path, "/t/")
-	requestPathPieces := strings.Split(requestPath, "/")
-
-	if len(requestPathPieces) > 2 {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	login := requestPathPieces[0]
-
-	pool := "main"
-	if len(requestPathPieces) == 2 && requestPathPieces[1] != "" {
-		pool = requestPathPieces[1]
-	}
+	// does not need validate token because 'http' package will validate request
+	// uri and remove '../' partitions.
+	token := strings.TrimPrefix(r.URL.Path, "/t/")
 
 	table, err := OpenHashTable(
-		filepath.Join(handler.Dir, login+":"+pool),
+		filepath.Join(handler.Dir, token),
 		handler.HashTTL,
 	)
 

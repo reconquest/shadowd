@@ -15,16 +15,15 @@ const usage = `shadowd, secure login distribution service
 
 Usage:
   shadowd [options] [-L <listen>] [-s <hash_ttl>]
-  shadowd [options] -G <login> [-p <pool>] [-n <amount>] [-a <algo>]
+  shadowd [options] -G <token> [-n <amount>] [-a <algo>]
   shadowd [options] -C [-h <host>...] [-i <address>...] [-d <till>] [-b <bytes>]
   shadowd -h | --help
 
 Options:
-  -G  Generate and store hash-table for specified <login>. Password will be
-      readed from stdin.
+  -G  Generate and store hash-table for specified <token>. Password will read
+	  from stdin.
        -n <amount>    Generate hash-table of specified length [default: 2048].
        -a <algo>      Use specified algorithm [default: sha256].
-       -p <pool>      Set specified pool name [default: main].
   -C  Generate certificate pair for authenticating via HTTPS.
        -b <bytes>     Generate rsa key of specified length [default: 2048].
        -h <host>      Set specified host as trusted [default: $CERT_HOST].

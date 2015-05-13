@@ -21,12 +21,16 @@ type AlgorithmImplementation func(token string) string
 
 func handleTableGenerate(args map[string]interface{}) error {
 	var (
-		login         = args["<login>"].(string)
+		token         = args["<token>"].(string)
 		amountString  = args["-n"].(string)
 		algorithm     = args["-a"].(string)
 		hashTablesDir = args["-t"].(string)
-		pool          = args["-p"].(string)
 	)
+
+	err := validateToken(token)
+	if err != nil {
+		return err
+	}
 
 	password, err := getPassword("Enter password: ")
 	if err != nil {
@@ -48,7 +52,7 @@ func handleTableGenerate(args map[string]interface{}) error {
 		return errors.New("specified algorithm is not available")
 	}
 
-	file, err := os.Create(filepath.Join(hashTablesDir, login + ":" + pool))
+	file, err := os.Create(filepath.Join(hashTablesDir, token))
 	if err != nil {
 		return err
 	}
@@ -77,14 +81,14 @@ func makeShadowFileRecord(salt, hash string, algorithmId int) string {
 	return fmt.Sprintf("$%d$%s$%s", algorithmId, salt, hash)
 }
 
-func generateSha256(token string) string {
+func generateSha256(password string) string {
 	shadowRecord := fmt.Sprintf("$5$%s", generateShaSalt())
-	return C.GoString(C.crypt(C.CString(token), C.CString(shadowRecord)))
+	return C.GoString(C.crypt(C.CString(password), C.CString(shadowRecord)))
 }
 
-func generateSha512(token string) string {
+func generateSha512(password string) string {
 	shadowRecord := fmt.Sprintf("$6$%s", generateShaSalt())
-	return C.GoString(C.crypt(C.CString(token), C.CString(shadowRecord)))
+	return C.GoString(C.crypt(C.CString(password), C.CString(shadowRecord)))
 }
 
 func generateShaSalt() string {
@@ -110,6 +114,16 @@ func validateTablesDirPermissions(path string) error {
 			"hash tables dir is too open: %s "+
 				"(should be accessible only by owner)",
 			stat.Mode())
+	}
+
+	return nil
+}
+
+func validateToken(token string) error {
+	if strings.Contains(token, "../") {
+		return fmt.Errorf(
+			"specified token is not available, do not use '../' in token",
+		)
 	}
 
 	return nil
