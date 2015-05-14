@@ -161,6 +161,7 @@ func (handler *HashTableHandler) ServeHTTP(
 	)
 
 	if err != nil {
+		log.Println(err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}

@@ -68,11 +68,12 @@ func handleTableGenerate(args map[string]interface{}) error {
 
 	defer file.Close()
 
+	fmt.Println("Generating hash table...")
 	for i := 0; i < amount; i++ {
 		fmt.Fprintln(file, implementation(password))
 	}
 
-	return nil
+	return file.Close()
 }
 
 func getAlgorithmImplementation(algorithm string) AlgorithmImplementation {
