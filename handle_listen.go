@@ -169,16 +169,17 @@ func (handler *HashTableHandler) ServeHTTP(
 	handler.CleanupRecentClients()
 
 	clientIp := r.RemoteAddr[:strings.LastIndex(r.RemoteAddr, ":")]
+	clientCredentials := clientIp + "-" + token
 
 	// in case of client requested shadow entry not too long ago,
 	// we should send different entry on further invocations
-	if _, ok := handler.RecentClients[clientIp]; ok {
-		clientIp += "-next"
+	if _, ok := handler.RecentClients[clientCredentials]; ok {
+		clientCredentials += "-next"
 	} else {
-		handler.RecentClients[clientIp] = time.Now()
+		handler.RecentClients[clientCredentials] = time.Now()
 	}
 
-	record, err := table.GetRecordByHashedString(clientIp)
+	record, err := table.GetRecordByHashedString(clientCredentials)
 
 	if err != nil {
 		w.Write([]byte(err.Error()))
