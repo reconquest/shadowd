@@ -37,6 +37,15 @@ func handleTableGenerate(args map[string]interface{}) error {
 		return err
 	}
 
+	proofPassword, err := getPassword("Retype password: ")
+	if err != nil {
+		return err
+	}
+
+	if password != proofPassword {
+		return fmt.Errorf("specified passwords do not match")
+	}
+
 	err = validateTablesDirPermissions(hashTablesDir)
 	if err != nil {
 		return err
