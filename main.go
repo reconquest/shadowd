@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"strings"
@@ -35,6 +36,10 @@ Options:
                       [default: /var/shadowd/ht/].
   -c <cert_dir>       Use specified dir for storing and reading certificates
                       [default: /var/shadowd/cert/].`
+
+func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
+}
 
 func main() {
 	args, _ := docopt.Parse(
