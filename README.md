@@ -1,5 +1,7 @@
 # shadowd
 
+![shadow horse](https://cloud.githubusercontent.com/assets/8445924/9289438/97f8a2e8-435f-11e5-853c-255a7fe22d08.png)
+
 **shadowd** it is the secure login distribution service, which consists of two
 parts, server and client.
 
