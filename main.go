@@ -18,6 +18,7 @@ Usage:
   shadowd [options] [-L <listen>] [-s <hash_ttl>]
   shadowd [options] -G <token> [-n <amount>] [-a <algo>]
   shadowd [options] -C [-h <host>...] [-i <address>...] [-d <till>] [-b <bytes>]
+  shadowd [options] -K <token>
   shadowd -h | --help
 
 Options:
@@ -32,10 +33,16 @@ Options:
        -d <till>      Set time certificate valid till [default: $CERT_VALID].
   -L <listen>         Listen specified IP and port [default: :8080].
       -s <hash_ttl>   Use specified time duration as hash TTL [default: 24h].
+  -K                  Wait for SSH-key to be entered on stdin and append it
+                      to file, determined from <token>.
+      -r              Trim file for specified token, do not append.
   -t <table_dir>      Use specified dir for storing and reading hash-tables
                       [default: /var/shadowd/ht/].
   -c <cert_dir>       Use specified dir for storing and reading certificates
-                      [default: /var/shadowd/cert/].`
+                      [default: /var/shadowd/cert/].
+  -k <keys_dir>       Use specified dir for reading ssh-keys
+                      [default: /var/shadowd/ssh/].
+`
 
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
@@ -50,6 +57,8 @@ func main() {
 	switch {
 	case args["-G"]:
 		err = handleTableGenerate(args)
+	case args["-K"]:
+		err = handleSSHKeyAppend(args)
 	case args["-C"]:
 		err = handleCertificateGenerate(args)
 	default:

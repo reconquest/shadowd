@@ -108,6 +108,7 @@ func OpenHashTable(path string, hashTTL time.Duration) (*HashTable, error) {
 func handleListen(args map[string]interface{}) error {
 	var (
 		hashTablesDir = args["-t"].(string)
+		sshKeysDir    = args["-k"].(string)
 		certDir       = strings.TrimRight(args["-c"].(string), "/") + "/"
 	)
 
@@ -120,6 +121,10 @@ func handleListen(args map[string]interface{}) error {
 		Dir:           hashTablesDir,
 		RecentClients: map[string]time.Time{},
 		HashTTL:       hashTTL,
+	})
+
+	http.Handle("/ssh/", &SSHKeysHandler{
+		Dir: sshKeysDir,
 	})
 
 	var (
