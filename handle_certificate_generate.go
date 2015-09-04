@@ -22,6 +22,13 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		return err
 	}
 
+	if _, err := os.Stat(certDir); err != nil && os.IsNotExist(err) {
+		err = os.MkdirAll(certDir, 0700)
+		if err != nil {
+			return err
+		}
+	}
+
 	privateKey, err := rsa.GenerateKey(rand.Reader, rsaBlockSize)
 	if err != nil {
 		return fmt.Errorf("failed to generate private key: %s", err)

@@ -154,11 +154,28 @@ func handleListen(args map[string]interface{}) error {
 }
 
 func (handler *HashTableHandler) ServeHTTP(
-	w http.ResponseWriter, r *http.Request,
+	writer http.ResponseWriter, request *http.Request,
 ) {
 	// no need to validate token because 'http' package will validate request
 	// uri and remove '../' partitions.
-	token := strings.TrimPrefix(r.URL.Path, "/t/")
+	token := strings.TrimPrefix(request.URL.Path, "/t/")
+
+	if strings.HasSuffix(token, "/") || token == "" {
+		listing, err := getDirectoryListing(filepath.Join(handler.Dir, token))
+		if err != nil {
+			log.Println(err)
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		if len(listing) == 0 {
+			writer.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		writer.Write([]byte(strings.Join(listing, "\n")))
+		return
+	}
 
 	table, err := OpenHashTable(
 		filepath.Join(handler.Dir, token),
@@ -167,13 +184,13 @@ func (handler *HashTableHandler) ServeHTTP(
 
 	if err != nil {
 		log.Println(err)
-		w.WriteHeader(http.StatusNotFound)
+		writer.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	handler.CleanupRecentClients()
 
-	clientIp := r.RemoteAddr[:strings.LastIndex(r.RemoteAddr, ":")]
+	clientIp := request.RemoteAddr[:strings.LastIndex(request.RemoteAddr, ":")]
 	clientCredentials := clientIp + "-" + token
 
 	// in case of client requested shadow entry not too long ago,
@@ -187,12 +204,12 @@ func (handler *HashTableHandler) ServeHTTP(
 	record, err := table.GetRecordByHashedString(clientCredentials)
 
 	if err != nil {
-		w.Write([]byte(err.Error()))
-		w.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(err.Error()))
+		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.Write(record)
+	writer.Write(record)
 }
 
 func (handler *HashTableHandler) CleanupRecentClients() {
@@ -207,4 +224,51 @@ func (handler *HashTableHandler) CleanupRecentClients() {
 	}
 
 	handler.RecentClients = actualClients
+}
+
+func getDirectoryListing(directory string) (files []string, err error) {
+	files = []string{}
+
+	directory = filepath.Clean(directory)
+
+	if stat, err := os.Stat(directory); err != nil {
+		return nil, err
+	} else {
+		if !stat.IsDir() {
+			return nil, fmt.Errorf(
+				"speficied path '%s' is not a directory", directory,
+			)
+		}
+	}
+
+	err = filepath.Walk(
+		directory,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			// skip root dir
+			if info.IsDir() && directory == path {
+				return nil
+			}
+
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+
+			files = append(
+				files,
+				strings.TrimPrefix(strings.TrimPrefix(path, directory), "/"),
+			)
+
+			return nil
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
 }
