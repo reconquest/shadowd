@@ -66,7 +66,7 @@ func handleSSHKeyAppend(args map[string]interface{}) error {
 		truncate = true
 	}
 
-	openFlags := os.O_WRONLY
+	openFlags := os.O_WRONLY | os.O_CREATE
 	if truncate {
 		openFlags = openFlags | os.O_TRUNC
 	} else {
