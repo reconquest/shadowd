@@ -161,7 +161,7 @@ func (handler *HashTableHandler) ServeHTTP(
 	token := strings.TrimPrefix(request.URL.Path, "/t/")
 
 	if strings.HasSuffix(token, "/") || token == "" {
-		listing, err := getDirectoryListing(filepath.Join(handler.Dir, token))
+		listing, err := getFilesList(filepath.Join(handler.Dir, token))
 		if err != nil {
 			log.Println(err)
 
@@ -236,7 +236,7 @@ func (handler *HashTableHandler) CleanupRecentClients() {
 	handler.RecentClients = actualClients
 }
 
-func getDirectoryListing(directory string) (files []string, err error) {
+func getFilesList(directory string) (files []string, err error) {
 	files = []string{}
 
 	directory = filepath.Clean(directory)
