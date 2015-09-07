@@ -66,6 +66,16 @@ func handleSSHKeyAppend(args map[string]interface{}) error {
 		truncate = true
 	}
 
+	sshKeyBytes, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	_, comment, _, _, err := ssh.ParseAuthorizedKey(sshKeyBytes)
+	if err != nil {
+		return fmt.Errorf("can't parse key: %s", err)
+	}
+
 	openFlags := os.O_WRONLY | os.O_CREATE
 	if truncate {
 		openFlags = openFlags | os.O_TRUNC
@@ -80,16 +90,6 @@ func handleSSHKeyAppend(args map[string]interface{}) error {
 	}
 
 	defer keyFile.Close()
-
-	sshKeyBytes, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		return err
-	}
-
-	_, comment, _, _, err := ssh.ParseAuthorizedKey(sshKeyBytes)
-	if err != nil {
-		return fmt.Errorf("can't parse key: %s", err)
-	}
 
 	_, err = keyFile.Write(sshKeyBytes)
 	if err != nil {
