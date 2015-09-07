@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -10,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"code.google.com/p/go.crypto/ssh"
+	"golang.org/x/crypto/ssh"
 )
 
 type SSHKeysHandler struct {
@@ -31,9 +32,15 @@ func (handler *SSHKeysHandler) ServeHTTP(
 		return
 	}
 
-	defer keyFile.Close()
+	_, err = io.Copy(writer, keyFile)
+	if err != nil {
+		log.Println(err)
+	}
 
-	io.Copy(writer, keyFile)
+	err = keyFile.Close()
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func handleSSHKeyAppend(args map[string]interface{}) error {
@@ -45,7 +52,7 @@ func handleSSHKeyAppend(args map[string]interface{}) error {
 
 	sshKeyPath := filepath.Join(sshKeysDir, token)
 	sshKeyDir := filepath.Dir(sshKeyPath)
-	if _, err := os.Stat(sshKeyDir); err != nil && os.IsNotExist(err) {
+	if _, err := os.Stat(sshKeyDir); os.IsNotExist(err) {
 		err = os.MkdirAll(sshKeyDir, 0700)
 		if err != nil {
 			return err
@@ -55,15 +62,18 @@ func handleSSHKeyAppend(args map[string]interface{}) error {
 	var keyFile *os.File
 	var err error
 
-	if _, err := os.Stat(sshKeyPath); err != nil && os.IsNotExist(err) {
+	if _, err := os.Stat(sshKeyPath); os.IsNotExist(err) {
 		truncate = true
 	}
 
+	openFlags := os.O_WRONLY
 	if truncate {
-		keyFile, err = os.Create(sshKeyPath)
+		openFlags = openFlags | os.O_TRUNC
 	} else {
-		keyFile, err = os.OpenFile(sshKeyPath, os.O_WRONLY|os.O_APPEND, 0644)
+		openFlags = openFlags | os.O_APPEND
 	}
+
+	keyFile, err = os.OpenFile(sshKeyPath, openFlags, 0644)
 
 	if err != nil {
 		return err
@@ -78,7 +88,7 @@ func handleSSHKeyAppend(args map[string]interface{}) error {
 
 	_, comment, _, _, err := ssh.ParseAuthorizedKey(sshKeyBytes)
 	if err != nil {
-		return err
+		return fmt.Errorf("can't parse key: %s", err)
 	}
 
 	_, err = keyFile.Write(sshKeyBytes)
@@ -86,7 +96,7 @@ func handleSSHKeyAppend(args map[string]interface{}) error {
 		return err
 	}
 
-	log.Println("added new key with comment:", comment)
+	fmt.Println("Added new key with comment:", comment)
 
 	return nil
 }

@@ -22,7 +22,7 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		return err
 	}
 
-	if _, err := os.Stat(certDir); err != nil && os.IsNotExist(err) {
+	if _, err := os.Stat(certDir); os.IsNotExist(err) {
 		err = os.MkdirAll(certDir, 0700)
 		if err != nil {
 			return err

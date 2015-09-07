@@ -58,7 +58,7 @@ func handleTableGenerate(args map[string]interface{}) error {
 
 	hashTablePath := filepath.Join(hashTablesDir, token)
 	hashTableDir := filepath.Dir(hashTablePath)
-	if _, err := os.Stat(hashTableDir); err != nil && os.IsNotExist(err) {
+	if _, err := os.Stat(hashTableDir); os.IsNotExist(err) {
 		err = os.MkdirAll(hashTableDir, 0700)
 		if err != nil {
 			return err

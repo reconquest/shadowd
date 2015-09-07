@@ -164,7 +164,13 @@ func (handler *HashTableHandler) ServeHTTP(
 		listing, err := getDirectoryListing(filepath.Join(handler.Dir, token))
 		if err != nil {
 			log.Println(err)
-			writer.WriteHeader(http.StatusNotFound)
+
+			if os.IsNotExist(err) {
+				writer.WriteHeader(http.StatusNotFound)
+			} else {
+				writer.WriteHeader(http.StatusInternalServerError)
+			}
+
 			return
 		}
 
@@ -173,7 +179,11 @@ func (handler *HashTableHandler) ServeHTTP(
 			return
 		}
 
-		writer.Write([]byte(strings.Join(listing, "\n")))
+		_, err = writer.Write([]byte(strings.Join(listing, "\n")))
+		if err != nil {
+			log.Println(err)
+		}
+
 		return
 	}
 
