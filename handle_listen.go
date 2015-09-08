@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -37,6 +38,17 @@ func (table HashTable) GetRecord(number int64) ([]byte, error) {
 	}
 
 	return data, nil
+}
+
+func (table HashTable) HashExists(hash string) (bool, error) {
+	scanner := bufio.NewScanner(table.File)
+	for scanner.Scan() {
+		if scanner.Text() == hash {
+			return true, nil
+		}
+	}
+
+	return false, scanner.Err()
 }
 
 func (table HashTable) GetRecordByHashedString(
