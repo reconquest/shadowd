@@ -59,11 +59,19 @@ func handleSSHKeyAppend(args map[string]interface{}) error {
 		}
 	}
 
-	var keyFile *os.File
-	var err error
+	openFlags := os.O_WRONLY
+	if _, err := os.Stat(sshKeyPath); err != nil {
+		if os.IsNotExist(err) {
+			openFlags |= os.O_CREATE
+		} else {
+			return err
+		}
+	}
 
-	if _, err := os.Stat(sshKeyPath); os.IsNotExist(err) {
-		truncate = true
+	if truncate {
+		openFlags |= os.O_TRUNC
+	} else {
+		openFlags |= os.O_APPEND
 	}
 
 	sshKeyBytes, err := ioutil.ReadAll(os.Stdin)
@@ -76,14 +84,7 @@ func handleSSHKeyAppend(args map[string]interface{}) error {
 		return fmt.Errorf("can't parse key: %s", err)
 	}
 
-	openFlags := os.O_WRONLY | os.O_CREATE
-	if truncate {
-		openFlags = openFlags | os.O_TRUNC
-	} else {
-		openFlags = openFlags | os.O_APPEND
-	}
-
-	keyFile, err = os.OpenFile(sshKeyPath, openFlags, 0644)
+	keyFile, err := os.OpenFile(sshKeyPath, openFlags, 0644)
 
 	if err != nil {
 		return err
