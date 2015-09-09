@@ -17,8 +17,8 @@ func (handler *HashValidatorHandler) ServeHTTP(
 	path := strings.TrimPrefix(request.URL.Path, "/v/")
 	path = strings.TrimRight(path, "/")
 
-	pathParts := strings.Split(strings.TrimRight(path, "/"), "/")
-	if len(pathParts) < 2 {
+	tokenIndex := strings.LastIndex(path, "/")
+	if tokenIndex == -1 {
 		log.Printf(
 			"got bad request to hash table validator: %s", request.URL.Path,
 		)
@@ -26,8 +26,7 @@ func (handler *HashValidatorHandler) ServeHTTP(
 		return
 	}
 
-	hash := pathParts[len(pathParts)-1]
-	token := strings.TrimSuffix(path, "/"+hash)
+	token, hash := path[:tokenIndex], path[tokenIndex+1:]
 
 	log.Printf(
 		"got request to hash table validator, hash: '%s', token: '%s'",
