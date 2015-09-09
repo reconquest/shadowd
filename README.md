@@ -33,6 +33,8 @@ REST API is used for communication between server and client.
 1. [Generate hash tables](#hash-tables)
 2. [Generate SSL certificates](#ssl-certificates)
 3. [Start shadowd](#start-shadowd)
+4. [Adding SSH keys](#adding-ssh-keys)
+5. [REST API](#rest-api)
 
 ### Hash Tables
 
@@ -104,8 +106,53 @@ default hash TTL is `24h`.
     certificates.
 - `-t <table_dir>` - use specified directory for storing and reading
     hash tables. (default: /var/shadowd/ht/)
+- `-k <keys_dir>` - use specified dir for reading ssh-keys.
+    (default: /var/shadowd/ssh/).
+
 
 
 Success, you have configured server, but you need to configure client, for this
 you should see
 [documentation here](https://github.com/reconquest/shadowc).
+
+### Adding SSH keys
+
+**shadowd** can act as public ssh keys distribution service. Keys can be added
+per token by using command:
+
+```
+shadowd -K <token>
+```
+
+After that command **shadowd** will wait for public SSH key to be entered on
+stdin.  Then, specified key will be added to keys list, which is stored under
+the directory, set by `-k` flag (/var/shadowd/ssh/ by default).
+
+Optionally, key file can be truncated by using flag `-r` to the standard `-K`
+invocation.
+
+**shadowd** will serve that keys by HTTP, as mentioned in following section.
+
+### REST API
+
+**shadowd** offers following REST API:
+
+* `/t/<token>`, where token can be any string, possibly containing slashes.
+  Most common interpretation for `<token>` is `<pool>/<username>`, e.g.
+  `dev/v.pupkin`.
+
+  `GET` on this URL will return unique hash for specified `<token>` from
+  pre-generated via `shadowd -G` hash-table. The first requested hash
+  guaranteed to be unique among different hosts, The second and later `GET`
+  requests will return same hash again and again until `<hash_ttl>` expires.
+  `<hash_ttl>` is configured on server by `-a` flag. Working in that way
+  **shadowd** offers secure way of transmitting one hash only once, and
+  legitimate client (e.g. **shadowc**) can always be sure that hash, obtained
+  from **shadowd**, has not been transferred to someone else on that host.
+
+* `/ssh/<token>`, where `<token>` is same, as above.
+
+  `GET` on this URL will return SSH keys, that has been added by `shadowd -K`
+  command in `authorized_keys` format (e.g. key per line).
+
+  No special security restrictions apply on that requests.
