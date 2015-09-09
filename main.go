@@ -31,11 +31,11 @@ Options:
        -h <host>      Set specified host as trusted [default: $CERT_HOST].
        -i <address>   Set specified ip address as trusted [default: $CERT_ADDR].
        -d <till>      Set time certificate valid till [default: $CERT_VALID].
-  -L <listen>         Listen specified IP and port [default: :8080].
-      -s <hash_ttl>   Use specified time duration as hash TTL [default: 24h].
-  -K                  Wait for SSH-key to be entered on stdin and append it
-                      to file, determined from <token>.
-      -r              Trim file for specified token, do not append.
+  -L <listen>  Listen specified IP and port [default: :8080].
+       -s <hash_ttl>  Use specified time duration as hash TTL [default: 24h].
+  -K  Wait for SSH-key to be entered on stdin and append it to file, determined
+      from <token>.
+       -r             Trim file for specified token, do not append.
   -t <table_dir>      Use specified dir for storing and reading hash-tables
                       [default: /var/shadowd/ht/].
   -c <cert_dir>       Use specified dir for storing and reading certificates
