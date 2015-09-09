@@ -23,7 +23,7 @@ Usage:
 
 Options:
   -G  Generate and store hash-table for specified <token>. Password will read
-	  from stdin.
+      from stdin.
        -n <amount>    Generate hash-table of specified length [default: 2048].
        -a <algo>      Use specified algorithm [default: sha256].
   -C  Generate certificate pair for authenticating via HTTPS.
