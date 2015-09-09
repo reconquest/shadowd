@@ -104,6 +104,11 @@ func OpenHashTable(path string) (*HashTable, error) {
 		return nil, err
 	}
 
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return nil, err
+	}
+
 	recordSize := len(line) + 1
 
 	count := stat.Size() / int64(recordSize)
