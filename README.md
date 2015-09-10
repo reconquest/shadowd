@@ -150,9 +150,21 @@ invocation.
   legitimate client (e.g. **shadowc**) can always be sure that hash, obtained
   from **shadowd**, has not been transferred to someone else on that host.
 
-* `/ssh/<token>`, where `<token>` is same, as above.
+* `/ssh/<token>`, where `<token>` is same as above.
 
   `GET` on this URL will return SSH keys, that has been added by `shadowd -K`
   command in `authorized_keys` format (e.g. key per line).
+
+  No special security restrictions apply on that requests.
+
+* `/v/<token>/<hash>`, where `<token>` is same as above, `<hash>` is
+    hash of a password, if `<token>` contains `/` (`<pool>/<username>`) then
+    the last part of URI will be used as `<hash>`.
+    i.e.
+    `dev/v.pupkin/$5$NqjWijImgEOapAJw$NL5K7g8SwMferONwiskz6bcluwlO7zbu3V/ZyLzavZD`
+
+  `GET` on this URL will return HTTP status `200 OK` if specified hash exists
+  in hash table for specified token, in other case, `404 Not
+  Found` will be returned.
 
   No special security restrictions apply on that requests.
