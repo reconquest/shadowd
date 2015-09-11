@@ -50,6 +50,7 @@ func (handler *HashValidatorHandler) ServeHTTP(
 	if !exists {
 		log.Printf("hash '%s' does not exists for '%s' token", hash, token)
 		response.WriteHeader(http.StatusNotFound)
-		return
+	} else {
+		response.WriteHeader(http.StatusOK)
 	}
 }
