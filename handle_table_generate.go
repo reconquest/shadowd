@@ -46,11 +46,6 @@ func handleTableGenerate(args map[string]interface{}) error {
 		return fmt.Errorf("specified passwords do not match")
 	}
 
-	err = validateTablesDirPermissions(hashTablesDir)
-	if err != nil {
-		return err
-	}
-
 	amount, err := strconv.Atoi(amountString)
 	if err != nil {
 		return err
@@ -63,11 +58,16 @@ func handleTableGenerate(args map[string]interface{}) error {
 
 	hashTablePath := filepath.Join(hashTablesDir, token)
 	hashTableDir := filepath.Dir(hashTablePath)
-	if _, err := os.Stat(hashTableDir); err != nil && os.IsNotExist(err) {
-		err = os.MkdirAll(hashTableDir, 0600)
+	if _, err := os.Stat(hashTableDir); os.IsNotExist(err) {
+		err = os.MkdirAll(hashTableDir, 0700)
 		if err != nil {
 			return err
 		}
+	}
+
+	err = validateTablesDirPermissions(hashTablesDir)
+	if err != nil {
+		return err
 	}
 
 	file, err := os.Create(hashTablePath)
@@ -81,6 +81,12 @@ func handleTableGenerate(args map[string]interface{}) error {
 	for i := 0; i < amount; i++ {
 		fmt.Fprintln(file, implementation(password))
 	}
+
+	fmt.Printf(
+		"Hash table %s with %d items successfully created.\n",
+		hashTablePath,
+		amount,
+	)
 
 	return file.Close()
 }
