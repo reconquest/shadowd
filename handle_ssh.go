@@ -59,14 +59,7 @@ func handleSSHKeyAppend(args map[string]interface{}) error {
 		}
 	}
 
-	openFlags := os.O_WRONLY
-	if _, err := os.Stat(sshKeyPath); err != nil {
-		if os.IsNotExist(err) {
-			openFlags |= os.O_CREATE
-		} else {
-			return err
-		}
-	}
+	openFlags := os.O_CREATE | os.O_WRONLY
 
 	if truncate {
 		openFlags |= os.O_TRUNC
