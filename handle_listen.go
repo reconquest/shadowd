@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -17,7 +18,6 @@ type HashTable struct {
 	Count      int64
 	RecordSize int
 	File       *os.File
-	HashTTL    time.Duration
 }
 
 func (table HashTable) GetRecord(number int64) ([]byte, error) {
@@ -40,9 +40,22 @@ func (table HashTable) GetRecord(number int64) ([]byte, error) {
 	return data, nil
 }
 
-func (table HashTable) GetRecordByHashedString(input string) ([]byte, error) {
+func (table HashTable) HashExists(hash string) (bool, error) {
+	scanner := bufio.NewScanner(table.File)
+	for scanner.Scan() {
+		if scanner.Text() == hash {
+			return true, nil
+		}
+	}
+
+	return false, scanner.Err()
+}
+
+func (table HashTable) GetRecordByHashedString(
+	input string, hashTTL time.Duration,
+) ([]byte, error) {
 	hash := sha256.Sum256([]byte(
-		fmt.Sprintf("%s%d", input, table.getTimeHashPart())),
+		fmt.Sprintf("%s%d", input, table.getTimeHashPart(hashTTL))),
 	)
 
 	hashMaxLength := int64(1)
@@ -64,8 +77,8 @@ func (table HashTable) GetRecordByHashedString(input string) ([]byte, error) {
 	return table.GetRecord(remainder)
 }
 
-func (table HashTable) getTimeHashPart() int64 {
-	return time.Now().Unix() / int64(table.HashTTL/time.Second)
+func (table HashTable) getTimeHashPart(hashTTL time.Duration) int64 {
+	return time.Now().Unix() / int64(hashTTL/time.Second)
 }
 
 type HashTableHandler struct {
@@ -74,7 +87,7 @@ type HashTableHandler struct {
 	HashTTL       time.Duration
 }
 
-func OpenHashTable(path string, hashTTL time.Duration) (*HashTable, error) {
+func OpenHashTable(path string) (*HashTable, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -91,6 +104,11 @@ func OpenHashTable(path string, hashTTL time.Duration) (*HashTable, error) {
 		return nil, err
 	}
 
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return nil, err
+	}
+
 	recordSize := len(line) + 1
 
 	count := stat.Size() / int64(recordSize)
@@ -99,7 +117,6 @@ func OpenHashTable(path string, hashTTL time.Duration) (*HashTable, error) {
 		Count:      count,
 		RecordSize: recordSize,
 		File:       file,
-		HashTTL:    hashTTL,
 	}
 
 	return table, nil
@@ -116,6 +133,10 @@ func handleListen(args map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	http.Handle("/v/", &HashValidatorHandler{
+		Dir: hashTablesDir,
+	})
 
 	http.Handle("/t/", &HashTableHandler{
 		Dir:           hashTablesDir,
@@ -187,11 +208,7 @@ func (handler *HashTableHandler) ServeHTTP(
 		return
 	}
 
-	table, err := OpenHashTable(
-		filepath.Join(handler.Dir, token),
-		handler.HashTTL,
-	)
-
+	table, err := OpenHashTable(filepath.Join(handler.Dir, token))
 	if err != nil {
 		log.Println(err)
 		writer.WriteHeader(http.StatusNotFound)
@@ -211,7 +228,9 @@ func (handler *HashTableHandler) ServeHTTP(
 		handler.RecentClients[clientCredentials] = time.Now()
 	}
 
-	record, err := table.GetRecordByHashedString(clientCredentials)
+	record, err := table.GetRecordByHashedString(
+		clientCredentials, handler.HashTTL,
+	)
 
 	if err != nil {
 		writer.Write([]byte(err.Error()))
