@@ -40,7 +40,8 @@ Options:
                       [default: /var/shadowd/ht/].
   -c <cert_dir>       Use specified dir for storing and reading certificates
                       [default: /var/shadowd/cert/].
-  -k <keys_dir>       Use specified dir for reading ssh-keys
+  -k <keys_dir>       Use specified dir for reading public SSH keys, added
+                      by -K command.
                       [default: /var/shadowd/ssh/].
 `
 
