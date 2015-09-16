@@ -51,7 +51,7 @@ func init() {
 
 func main() {
 	args, _ := docopt.Parse(
-		replaceDefaults(usage), nil, true, "shadowd 1.0", false,
+		replaceDefaults(usage), nil, true, "shadowd 2.0", false,
 	)
 
 	var err error
