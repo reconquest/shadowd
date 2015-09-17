@@ -19,7 +19,7 @@ Usage:
   shadowd [options] -G <token> [-n <amount>] [-a <algo>]
   shadowd [options] -C [-h <host>...] [-i <address>...] [-d <till>] [-b <bytes>]
   shadowd [options] -K <token>
-  shadowd -h | --help
+  shadowd --help
 
 Options:
   -G  Generate and store hash-table for specified <token>. Password will read
