@@ -2,27 +2,46 @@
 
 ![shadow horse](https://cloud.githubusercontent.com/assets/8445924/9289438/97f8a2e8-435f-11e5-853c-255a7fe22d08.png)
 
-**shadowd** it is the secure login distribution service, which consists of two
-parts, server and client.
+**shadowd** is the secure login distribution service, which consists of two
+parts: server and client.
 
-In a typical server configuration case, you should manually update the
-`/etc/shadow` and copy it on all servers, afterwards every servers will have
-same hash in the `/etc/shadow`. Supposed that attacker successfully gained
-access to one of your servers and found collision to that single hash, so
-afterwards *attacker actually got access to all servers with that hash*.
+In a typical server configuration case you should manually update the
+`/etc/shadow` and copy it on all servers (or via automatic configuration
+system); afterwards each server will have same hash in the `/etc/shadow`.
+Supposed that attacker successfully gained access to one of your servers and
+found collision to that single hash *attacker actually got access to all
+servers with that hash*.
 
-**shadowd solution** is to generate hash tables of specified passwords mixed
+**shadowd** is summoned to solve that obscure problem.
+
+**shadowd solution** is to generate hash tables for specified passwords mixed
 with random salt for specified users and guarantee that a client receive unique
 hash.
 
-If attacker gained user access to server and try to repeat request to
-shadowd server and get actual hash during the hash TTL period (one day by
-default), then shadowd will give him another unique hash entry. Actually,
-**shadowd** can give only two unique hash entries for hash TTL period for one
-client, first hash entry may be received only for first request per hash TTL
-period, in all later requests will received another hash.
+One **shadowd** instance can be used for securely instanciate thousands of
+servers with same root password for each one. Without any doubts about possible
+break-in.
 
-**shadowd** is summoned to solve that obscure problems.
+If attacker has user (non-root) access to the one server and try to repeat
+request to shadowd server and get actual hash during the hash TTL period (one
+day by default), then shadowd will give him another unique hash entry.
+Actually, **shadowd** can give only two unique hash entries for hash TTL period
+for one client, first hash entry may be received only for first request per
+hash TTL period, all other requests will be served by another hash.
+
+If attacker has root access to the one server and will try to brute-force
+hash entry for root from `/etc/shadow`, it will not give him any access for
+other servers with same password, because **shadowd** will give different
+hashes for each server.
+
+If attacker will gain root access to the **shadowd** server (worst-case
+scenario), it's will be very time-consuming to brute-force thousands of hashes
+without any knowledge about which server is using specific hash entry.
+
+**shadowd** can act as SSH keys publisher too.
+
+**shadowd** can also configure with passwords containers or any other type of
+nodes in your infrastructure.
 
 REST API is used for communication between server and client.
 
@@ -54,9 +73,10 @@ for example).
 
 ### SSL certificates
 
-Assume attacker gained access to your servers, he can wait for next
+Assume that attacker gained access to your servers, then he can wait for next
 password update and do man-in-the-middle attack, afterwards passwords on
-servers will be changed on him password and get more access to the servers.
+servers will be changed on his password and he will get more access to the
+servers.
 
 For solving that problem one should use SSL certificates, which confirms
 authority of the login distribution server.
@@ -100,6 +120,9 @@ shadowd [options] [-L <listen>] [-a <hash_ttl>]
 For setting hash TTL duration you should pass `-a <hash_ttl>` argument, by
 default hash TTL is `24h`.
 
+TTL is amount of time after which shadowd will serve different unique pair of
+hash entries to the same requesting client.
+
 #### General options:
 
 - `-c <cert_dir>` - use specified directory for storing and reading
@@ -108,8 +131,6 @@ default hash TTL is `24h`.
     hash tables. (default: /var/shadowd/ht/)
 - `-k <keys_dir>` - use specified dir for reading ssh-keys.
     (default: /var/shadowd/ssh/).
-
-
 
 Success, you have configured server, but you need to configure client, for this
 you should see
