@@ -47,6 +47,40 @@ REST API is used for communication between server and client.
 
 ![Plan](https://cloud.githubusercontent.com/assets/8445924/7489851/95b5c748-f3ca-11e4-9487-bc4daeedc385.png)
 
+## FAQ
+
+### Why not LDAP/AD/SSSD/Whatever?
+
+LDAP/AD/SSSD is monstrous software which requires massive configuration. It's
+far from just installing package to make it work. LDAP by itself just ugly,
+it's not so "lightweight" as it supposed to be from it's name.
+
+**shadowd** is very easy to install and do not even have configuration file.
+
+In comparison to LDAP, **shadowd** is not a remote authorisation provider, so
+when network or shadowd host will go down, you still will be able to login on
+concrete hosts configured with **shadowc**, because all shadow hashes stored
+locally on concrete host.
+
+### Isn't attacker will brute-force actual password faster instead of finding a collision in SHA?
+
+It is possible indeed, but having sufficiently long password like
+`thecorrecthorsebatterystapleinspace` (https://xkcd.com/936/) will neglect this
+probability.
+
+### What is actual use case for this?
+
+Local authentication as well as password authentication should be always
+possible for ops engineers. If something wrong goes with LDAP or any other
+remote authentication agent, you will blame that day you integrated it into
+your environment.
+
+There is no way of configuring local root (like, available only through IPMI)
+on the frontend load-balancing servers through remote authorisation agent.
+
+**shadowd** can be safely used for setting root password even on load-balancing
+servers.
+
 ## shadowd configuration
 
 1. [Generate hash tables](#hash-tables)
@@ -70,6 +104,9 @@ Actually, user token can be same as login, but if you want to use several
 passwords for same username on different servers, you should specify `<token>`
 as `<pool>/<login>` where `<pool>` it is name of role (`production` or `testing`
 for example).
+
+Already running instance of **shadowd** do not require reload to serve newly
+generated hash-tables.
 
 ### SSL certificates
 
@@ -106,6 +143,9 @@ Afterwards, `cert.pem` and `key.pem` will be stored in
 
 Since client needs certificate, you should copy `cert.pem` on
 server with client to `/etc/shadowc/cert.pem`.
+
+**shadowd** will generate certificate with default parameters (can be seen in
+program usage) on it's first run.
 
 ### Start shadowd
 
