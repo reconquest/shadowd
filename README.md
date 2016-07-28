@@ -108,6 +108,8 @@ for example).
 Already running instance of **shadowd** do not require reload to serve newly
 generated hash-tables.
 
+![loading message](http://i.imgur.com/fbKYTMX.gif)
+
 ### SSL certificates
 
 Assume that attacker gained access to your servers, then he can wait for next
