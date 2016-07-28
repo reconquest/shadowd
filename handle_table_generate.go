@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/kovetskiy/spinner-go"
 )
 
 // #cgo LDFLAGS: -lcrypt
@@ -77,10 +79,15 @@ func handleTableGenerate(args map[string]interface{}) error {
 
 	defer file.Close()
 
-	fmt.Println("Generating hash table...")
 	for i := 0; i < amount; i++ {
+		spinner.SetStatus(
+			"Generating hash table... " + fmt.Sprint(i*100/amount) + "%",
+		)
+		spinner.Spin()
 		fmt.Fprintln(file, implementation(password))
 	}
+
+	spinner.Stop()
 
 	fmt.Printf(
 		"Hash table %s with %d items successfully created.\n",
