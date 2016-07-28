@@ -33,7 +33,7 @@ Options:
     -h --host <host>       Set specified host as trusted [default: $CERT_HOST].
     -i --address <ip>      Set specified ip address as trusted [default: $CERT_ADDR].
     -d --till <date>       Set time certificate valid till [default: $CERT_VALID].
-  -L --listen <address>    Listen specified IP and port [default: :8080].
+  -L --listen <address>    Listen specified IP and port [default: :443].
     -s --ttl <time>        Use specified time duration as hash TTL [default: 24h].
   -K --key                 Wait for SSH-key to be entered on stdin and append it to file,
                             determined from <token>.

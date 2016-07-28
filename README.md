@@ -93,11 +93,11 @@ servers.
 
 For generating hash table you should run:
 ```
-shadowd [options] -G <token>
+shadowd [options] -G <token> [-n <size>] [-a <algo>]
 ```
 **shadowd** will prompt for a password for specified user token, and after that
 will generate hash table with 2048 hashed entries of specified password, hash
-table size can be specified via flag `-n <amount>` `sha256` will be used as
+table size can be specified via flag `-n <size>` `sha256` will be used as
 default hashing algorithm, but `sha512` can be used via `-a sha512` flag.
 
 Actually, user token can be same as login, but if you want to use several
@@ -125,16 +125,17 @@ hostname and ip address as trusted, in other cases you should pass options for
 setting trusted hosts/addresses of shadowd.
 
 Possible Options:
-- `-h <host>` - set specified host as trusted. (default: current hostname)
-- `-i <address>` - sett specified ip address as trusted. (default: current ip
-    address)
-- `-d <till>` - set time certicicate valid till (default: current
+- `-h --host <host>` - set specified host as trusted. (default: current
+    hostname)
+- `-i --address <ip>` - set specified ip address as trusted. (default: current
+    ip address)
+- `-d --till <date>` - set time certicicate valid till (default: current
     date plus one year).
-- `-b <bytes>` - set specified length of RSA key. (default: 2048)
+- `-b --bytes <length>` - set specified length of RSA key. (default: 2048)
 
 And for all of this you should run one command:
 ```
-shadowd [options] -C [-h <host>...] [-i <address>...]
+shadowd [options] -C [-h <host>...] [-i <ip>...] [-d <date>] [-b <length>]
 ```
 
 Afterwards, `cert.pem` and `key.pem` will be stored in
@@ -149,15 +150,15 @@ program usage) on it's first run.
 
 ### Start shadowd
 
-As mentioned earlier, shadowd uses REST API, by default listening on `:8080`,
+As mentioned earlier, shadowd uses REST API, by default listening on `:443`,
 but you can set specified address and port through passing argument
 `-L <listen>`:
 
 ```
-shadowd [options] [-L <listen>] [-a <hash_ttl>]
+shadowd [options] -L <listen> [-s <time>]
 ```
 
-For setting hash TTL duration you should pass `-a <hash_ttl>` argument, by
+For setting hash TTL duration you should pass `-s <time>` argument, by
 default hash TTL is `24h`.
 
 TTL is amount of time after which shadowd will serve different unique pair of
@@ -165,11 +166,11 @@ hash entries to the same requesting client.
 
 #### General options:
 
-- `-c <cert_dir>` - use specified directory for storing and reading
+- `-c -certs <dir>` - use specified directory for storing and reading
     certificates.
-- `-t <table_dir>` - use specified directory for storing and reading
+- `-t --tables <dir>` - use specified directory for storing and reading
     hash tables. (default: /var/shadowd/ht/)
-- `-k <keys_dir>` - use specified dir for reading ssh-keys.
+- `-k --keys <dir>` - use specified dir for reading ssh-keys.
     (default: /var/shadowd/ssh/).
 
 Success, you have configured server, but you need to configure client, for this
@@ -187,10 +188,10 @@ shadowd -K <token>
 
 After that command **shadowd** will wait for public SSH key to be entered on
 stdin.  Then, specified key will be added to keys list, which is stored under
-the directory, set by `-k` flag (/var/shadowd/ssh/ by default).
+the directory, set by `-k` flag (`/var/shadowd/ssh/` by default).
 
-Optionally, key file can be truncated by using flag `-r` to the standard `-K`
-invocation.
+Optionally, key file can be truncated by using flag `-r --truncate` to the
+standard `-K` invocation.
 
 **shadowd** will serve that keys by HTTP, as mentioned in following section.
 
