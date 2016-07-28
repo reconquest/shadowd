@@ -45,7 +45,7 @@ nodes in your infrastructure.
 
 REST API is used for communication between server and client.
 
-![Plan](https://cloud.githubusercontent.com/assets/8445924/7489851/95b5c748-f3ca-11e4-9487-bc4daeedc385.png)
+![Plan](http://i.imgur.com/gfDy0a5.png)
 
 ## FAQ
 
