@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kovetskiy/spinner-go"
 )
@@ -27,6 +28,7 @@ func handleTableGenerate(args map[string]interface{}) error {
 		amountString  = args["--length"].(string)
 		algorithm     = args["--algorithm"].(string)
 		hashTablesDir = args["--tables"].(string)
+		quiet         = args["--quiet"].(bool)
 	)
 
 	err := validateToken(token)
@@ -79,15 +81,27 @@ func handleTableGenerate(args map[string]interface{}) error {
 
 	defer file.Close()
 
-	for i := 0; i < amount; i++ {
-		spinner.SetStatus(
-			"Generating hash table... " + fmt.Sprint(i*100/amount) + "%",
-		)
-		spinner.Spin()
+	if !quiet {
+		spinner.Start()
+		spinner.SetInterval(time.Millisecond * 100)
+	}
+
+	for i := 1; i <= amount; i++ {
+		if !quiet {
+			spinner.SetStatus(
+				fmt.Sprintf(
+					"Generating hash table... %d%% ",
+					i*100/amount,
+				),
+			)
+		}
+
 		fmt.Fprintln(file, implementation(password))
 	}
 
-	spinner.Stop()
+	if !quiet {
+		spinner.Stop()
+	}
 
 	fmt.Printf(
 		"Hash table %s with %d items successfully created.\n",

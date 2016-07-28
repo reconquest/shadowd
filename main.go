@@ -44,6 +44,7 @@ Options:
                             [default: /var/shadowd/cert/].
   -k --keys <dir>          Use specified dir for reading public SSH keys.
                             [default: /var/shadowd/ssh/].
+  -q --quiet               Quiet mode, be less chatty.
   --help                   Show this screen.
   --version                Show program version.
 `
