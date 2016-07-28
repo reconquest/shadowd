@@ -12,37 +12,40 @@ import (
 	"github.com/docopt/docopt-go"
 )
 
-const usage = `shadowd, secure login distribution service
+var version = `2.2`
+var usage = `shadowd, secure login distribution service
 
 Usage:
-  shadowd [options] [-L <listen>] [-s <hash_ttl>]
-  shadowd [options] -G <token> [-n <amount>] [-a <algo>]
-  shadowd [options] -C [-h <host>...] [-i <address>...] [-d <till>] [-b <bytes>]
-  shadowd [options] -K <token>
+  shadowd [options] -L <address> [-s <time>]
+  shadowd [options] -G <token> [-n <size>] [-a <algo>]
+  shadowd [options] -C [-h <host>...] [-i <ip>...] [-d <date>] [-b <length>]
+  shadowd [options] -K <token> [-r]
   shadowd --help
+  shadowd --version
 
 Options:
-  -G  Generate and store hash-table for specified <token>. Password will read
-      from stdin.
-       -n <amount>    Generate hash-table of specified length [default: 2048].
-       -a <algo>      Use specified algorithm [default: sha256].
-  -C  Generate certificate pair for authenticating via HTTPS.
-       -b <bytes>     Generate rsa key of specified length [default: 2048].
-       -h <host>      Set specified host as trusted [default: $CERT_HOST].
-       -i <address>   Set specified ip address as trusted [default: $CERT_ADDR].
-       -d <till>      Set time certificate valid till [default: $CERT_VALID].
-  -L <listen>  Listen specified IP and port [default: :8080].
-       -s <hash_ttl>  Use specified time duration as hash TTL [default: 24h].
-  -K  Wait for SSH-key to be entered on stdin and append it to file, determined
-      from <token>.
-       -r             Trim file for specified token, do not append.
-  -t <table_dir>      Use specified dir for storing and reading hash-tables
-                      [default: /var/shadowd/ht/].
-  -c <cert_dir>       Use specified dir for storing and reading certificates
-                      [default: /var/shadowd/cert/].
-  -k <keys_dir>       Use specified dir for reading public SSH keys, added
-                      by -K command.
-                      [default: /var/shadowd/ssh/].
+  -G --generate            Generate and store hash-table for specified <token>.
+                            Password will be read from stdin.
+    -n --length <size>     Generate hash-table of specified length [default: 2048].
+    -a --algorithm <algo>  Use specified algorithm [default: sha256].
+  -C --certificate         Generate certificate pair for authenticating via HTTPS.
+    -b --bytes <length>    Generate rsa key of specified length [default: 2048].
+    -h --host <host>       Set specified host as trusted [default: $CERT_HOST].
+    -i --address <ip>      Set specified ip address as trusted [default: $CERT_ADDR].
+    -d --till <date>       Set time certificate valid till [default: $CERT_VALID].
+  -L --listen <address>    Listen specified IP and port [default: :8080].
+    -s --ttl <time>        Use specified time duration as hash TTL [default: 24h].
+  -K --key                 Wait for SSH-key to be entered on stdin and append it to file,
+                            determined from <token>.
+    -r --truncate          Truncate file for specified token, do not append.
+  -t --tables <dir>        Use specified dir for storing and reading hash-tables
+                            [default: /var/shadowd/ht/].
+  -c --certs <dir>         Use specified dir for storing and reading certificates
+                            [default: /var/shadowd/cert/].
+  -k --keys <dir>          Use specified dir for reading public SSH keys.
+                            [default: /var/shadowd/ssh/].
+  --help                   Show this screen.
+  --version                Show program version.
 `
 
 func init() {
@@ -51,16 +54,16 @@ func init() {
 
 func main() {
 	args, _ := docopt.Parse(
-		replaceDefaults(usage), nil, true, "shadowd 2.0", false,
+		replaceDefaults(usage), nil, true, "shadowd "+version, false,
 	)
 
 	var err error
 	switch {
-	case args["-G"]:
+	case args["--generate"]:
 		err = handleTableGenerate(args)
-	case args["-K"]:
+	case args["--key"]:
 		err = handleSSHKeyAppend(args)
-	case args["-C"]:
+	case args["--certificate"]:
 		err = handleCertificateGenerate(args)
 	default:
 		err = handleListen(args)

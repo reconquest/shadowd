@@ -22,9 +22,9 @@ type AlgorithmImplementation func(token string) string
 func handleTableGenerate(args map[string]interface{}) error {
 	var (
 		token         = args["<token>"].(string)
-		amountString  = args["-n"].(string)
-		algorithm     = args["-a"].(string)
-		hashTablesDir = args["-t"].(string)
+		amountString  = args["--length"].(string)
+		algorithm     = args["--algorithm"].(string)
+		hashTablesDir = args["--tables"].(string)
 	)
 
 	err := validateToken(token)

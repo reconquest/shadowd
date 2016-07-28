@@ -16,8 +16,8 @@ import (
 )
 
 func handleCertificateGenerate(args map[string]interface{}) error {
-	certDir := strings.TrimRight(args["-c"].(string), "/") + "/"
-	rsaBlockSize, err := strconv.Atoi(args["-b"].(string))
+	certDir := strings.TrimRight(args["--certs"].(string), "/") + "/"
+	rsaBlockSize, err := strconv.Atoi(args["--bytes"].(string))
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		return fmt.Errorf("failed to generate private key: %s", err)
 	}
 
-	invalidAfter, err := time.Parse("2006-02-01", args["-d"].(string))
+	invalidAfter, err := time.Parse("2006-02-01", args["--till"].(string))
 	if err != nil {
 		return err
 	}
@@ -62,10 +62,10 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 			x509.KeyUsageCertSign,
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 
-		DNSNames: args["-h"].([]string),
+		DNSNames: args["--host"].([]string),
 	}
 
-	addrs := args["-i"].([]string)
+	addrs := args["--address"].([]string)
 	for _, addr := range addrs {
 		if ip := net.ParseIP(addr); ip != nil {
 			cert.IPAddresses = append(cert.IPAddresses, ip)

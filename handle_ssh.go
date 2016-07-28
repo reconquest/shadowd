@@ -46,8 +46,8 @@ func (handler *SSHKeysHandler) ServeHTTP(
 func handleSSHKeyAppend(args map[string]interface{}) error {
 	var (
 		token      = args["<token>"].(string)
-		truncate   = args["-r"].(bool)
-		sshKeysDir = args["-k"].(string)
+		truncate   = args["--truncate"].(bool)
+		sshKeysDir = args["--keys"].(string)
 	)
 
 	sshKeyPath := filepath.Join(sshKeysDir, token)

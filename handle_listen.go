@@ -124,12 +124,12 @@ func OpenHashTable(path string) (*HashTable, error) {
 
 func handleListen(args map[string]interface{}) error {
 	var (
-		hashTablesDir = args["-t"].(string)
-		sshKeysDir    = args["-k"].(string)
-		certDir       = strings.TrimRight(args["-c"].(string), "/") + "/"
+		hashTablesDir = args["--tables"].(string)
+		sshKeysDir    = args["--keys"].(string)
+		certDir       = strings.TrimRight(args["--certs"].(string), "/") + "/"
 	)
 
-	hashTTL, err := time.ParseDuration(args["-s"].(string))
+	hashTTL, err := time.ParseDuration(args["--ttl"].(string))
 	if err != nil {
 		return err
 	}
@@ -170,8 +170,10 @@ func handleListen(args map[string]interface{}) error {
 		}
 	}
 
-	log.Println("starting listening on", args["-L"].(string))
-	return http.ListenAndServeTLS(args["-L"].(string), certFile, keyFile, nil)
+	log.Println("starting listening on", args["--listen"].(string))
+	return http.ListenAndServeTLS(
+		args["--listen"].(string), certFile, keyFile, nil,
+	)
 }
 
 func (handler *HashTableHandler) ServeHTTP(
