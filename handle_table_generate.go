@@ -7,12 +7,12 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/kovetskiy/spinner-go"
+	"github.com/seletskiy/hierr"
 )
 
 // #cgo LDFLAGS: -lcrypt
@@ -22,16 +22,20 @@ import "C"
 
 type AlgorithmImplementation func(token string) string
 
-func handleTableGenerate(args map[string]interface{}) error {
+func handleTableGenerate(backend Backend, args map[string]interface{}) error {
 	var (
-		token         = args["<token>"].(string)
-		amountString  = args["--length"].(string)
-		algorithm     = args["--algorithm"].(string)
-		hashTablesDir = args["--tables"].(string)
-		quiet         = args["--quiet"].(bool)
+		token     = args["<token>"].(string)
+		lengthRaw = args["--length"].(string)
+		algorithm = args["--algorithm"].(string)
+		quiet     = args["--quiet"].(bool)
 	)
 
 	err := validateToken(token)
+	if err != nil {
+		return err
+	}
+
+	length, err := strconv.Atoi(lengthRaw)
 	if err != nil {
 		return err
 	}
@@ -50,66 +54,47 @@ func handleTableGenerate(args map[string]interface{}) error {
 		return fmt.Errorf("specified passwords do not match")
 	}
 
-	amount, err := strconv.Atoi(amountString)
-	if err != nil {
-		return err
-	}
-
 	implementation := getAlgorithmImplementation(algorithm)
 	if implementation == nil {
 		return errors.New("specified algorithm is not available")
 	}
-
-	hashTablePath := filepath.Join(hashTablesDir, token)
-	hashTableDir := filepath.Dir(hashTablePath)
-	if _, err := os.Stat(hashTableDir); os.IsNotExist(err) {
-		err = os.MkdirAll(hashTableDir, 0700)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = validateTablesDirPermissions(hashTablesDir)
-	if err != nil {
-		return err
-	}
-
-	file, err := os.Create(hashTablePath)
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
 
 	if !quiet {
 		spinner.Start()
 		spinner.SetInterval(time.Millisecond * 100)
 	}
 
-	for i := 1; i <= amount; i++ {
+	table := make([]string, length)
+	for i := 1; i <= length; i++ {
 		if !quiet {
 			spinner.SetStatus(
 				fmt.Sprintf(
 					"Generating hash table... %d%% ",
-					i*100/amount,
+					i*100/length,
 				),
 			)
 		}
 
-		fmt.Fprintln(file, implementation(password))
+		table = append(table, implementation(password))
 	}
 
 	if !quiet {
 		spinner.Stop()
 	}
 
+	err = backend.AddHashTable(token, table)
+	if err != nil {
+		return hierr.Errorf(
+			err, "can't save generated hash table",
+		)
+	}
+
 	fmt.Printf(
 		"Hash table %s with %d items successfully created.\n",
-		hashTablePath,
-		amount,
+		token, length,
 	)
 
-	return file.Close()
+	return nil
 }
 
 func getAlgorithmImplementation(algorithm string) AlgorithmImplementation {
@@ -143,22 +128,6 @@ func generateShaSalt() string {
 	}
 
 	return string(salt)
-}
-
-func validateTablesDirPermissions(path string) error {
-	stat, err := os.Stat(path)
-	if err != nil {
-		return err
-	}
-
-	if stat.Mode()&0077 != 0 {
-		return fmt.Errorf(
-			"hash tables dir is too open: %s "+
-				"(should be accessible only by owner)",
-			stat.Mode())
-	}
-
-	return nil
 }
 
 func validateToken(token string) error {

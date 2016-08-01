@@ -10,20 +10,29 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 )
 
-func handleCertificateGenerate(args map[string]interface{}) error {
-	certDir := strings.TrimRight(args["--certs"].(string), "/") + "/"
-	rsaBlockSize, err := strconv.Atoi(args["--bytes"].(string))
+func handleCertificateGenerate(
+	backend Backend, args map[string]interface{},
+) error {
+	var (
+		certsDir        = args["--certs"].(string)
+		rsaBlockSizeRaw = args["--bytes"].(string)
+		validTill       = args["--till"].(string)
+		hosts           = args["--host"].([]string)
+		addresses       = args["--address"].([]string)
+	)
+
+	rsaBlockSize, err := strconv.Atoi(rsaBlockSizeRaw)
 	if err != nil {
 		return err
 	}
 
-	if _, err := os.Stat(certDir); os.IsNotExist(err) {
-		err = os.MkdirAll(certDir, 0700)
+	if _, err := os.Stat(certsDir); os.IsNotExist(err) {
+		err = os.MkdirAll(certsDir, 0700)
 		if err != nil {
 			return err
 		}
@@ -34,7 +43,7 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		return fmt.Errorf("failed to generate private key: %s", err)
 	}
 
-	invalidAfter, err := time.Parse("2006-02-01", args["--till"].(string))
+	invalidAfter, err := time.Parse("2006-02-01", validTill)
 	if err != nil {
 		return err
 	}
@@ -62,13 +71,12 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 			x509.KeyUsageCertSign,
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 
-		DNSNames: args["--host"].([]string),
+		DNSNames: hosts,
 	}
 
-	addrs := args["--address"].([]string)
-	for _, addr := range addrs {
-		if ip := net.ParseIP(addr); ip != nil {
-			cert.IPAddresses = append(cert.IPAddresses, ip)
+	for _, address := range addresses {
+		if addr := net.ParseIP(address); addr != nil {
+			cert.IPAddresses = append(cert.IPAddresses, addr)
 		}
 
 	}
@@ -80,7 +88,7 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 		return fmt.Errorf("failed to create certificate: %s", err)
 	}
 
-	certOutFd, err := os.Create(certDir + "cert.pem")
+	certOutFd, err := os.Create(filepath.Join(certsDir, "cert.pem"))
 	if err != nil {
 		return fmt.Errorf("failed to create cert file: %s", err)
 	}
@@ -102,7 +110,9 @@ func handleCertificateGenerate(args map[string]interface{}) error {
 	}
 
 	keyOutFd, err := os.OpenFile(
-		certDir+"key.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600,
+		filepath.Join(certsDir, "key.pem"),
+		os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
+		0600,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create key file: %s", err)

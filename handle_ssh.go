@@ -2,20 +2,19 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"path"
-	"path/filepath"
 	"strings"
+
+	"github.com/seletskiy/hierr"
 
 	"golang.org/x/crypto/ssh"
 )
 
 type SSHKeysHandler struct {
-	Dir string
+	backend Backend
 }
 
 func (handler *SSHKeysHandler) ServeHTTP(
@@ -23,71 +22,46 @@ func (handler *SSHKeysHandler) ServeHTTP(
 ) {
 	token := strings.TrimPrefix(request.URL.Path, "/ssh/")
 
-	keyPath := path.Join(handler.Dir, token)
-
-	keyFile, err := os.Open(keyPath)
+	keys, err := handler.backend.GetPublicKeys(token)
 	if err != nil {
+		if err == ErrNotFound {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+
 		log.Println(err)
-		writer.WriteHeader(http.StatusNotFound)
+		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	_, err = io.Copy(writer, keyFile)
-	if err != nil {
-		log.Println(err)
-	}
-
-	err = keyFile.Close()
-	if err != nil {
-		log.Println(err)
-	}
+	writer.Write([]byte(keys))
 }
 
-func handleSSHKeyAppend(args map[string]interface{}) error {
+func handleSSHKeyAppend(backend Backend, args map[string]interface{}) error {
 	var (
-		token      = args["<token>"].(string)
-		truncate   = args["--truncate"].(bool)
-		sshKeysDir = args["--keys"].(string)
+		token    = args["<token>"].(string)
+		truncate = args["--truncate"].(bool)
 	)
 
-	sshKeyPath := filepath.Join(sshKeysDir, token)
-	sshKeyDir := filepath.Dir(sshKeyPath)
-	if _, err := os.Stat(sshKeyDir); os.IsNotExist(err) {
-		err = os.MkdirAll(sshKeyDir, 0700)
-		if err != nil {
-			return err
-		}
-	}
-
-	openFlags := os.O_CREATE | os.O_WRONLY
-
-	if truncate {
-		openFlags |= os.O_TRUNC
-	} else {
-		openFlags |= os.O_APPEND
-	}
-
-	sshKeyBytes, err := ioutil.ReadAll(os.Stdin)
+	key, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
-		return err
+		return hierr.Errorf(
+			err, "can't read stdin",
+		)
 	}
 
-	_, comment, _, _, err := ssh.ParseAuthorizedKey(sshKeyBytes)
+	_, comment, _, _, err := ssh.ParseAuthorizedKey(key)
 	if err != nil {
-		return fmt.Errorf("can't parse key: %s", err)
+		return hierr.Errorf(
+			err, "can't parse key",
+		)
 	}
 
-	keyFile, err := os.OpenFile(sshKeyPath, openFlags, 0644)
-
+	err = backend.AddPublicKey(token, key, truncate)
 	if err != nil {
-		return err
-	}
-
-	defer keyFile.Close()
-
-	_, err = keyFile.Write(sshKeyBytes)
-	if err != nil {
-		return err
+		return hierr.Errorf(
+			err, "can't add public key for %s", token,
+		)
 	}
 
 	fmt.Println("Added new key with comment:", comment)
