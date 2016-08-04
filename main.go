@@ -13,7 +13,7 @@ import (
 	"github.com/seletskiy/hierr"
 )
 
-var version = `2.2`
+var version = `3.0`
 var usage = `shadowd, secure login distribution service
 
 Usage:
