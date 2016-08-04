@@ -50,10 +50,10 @@ func handleSSHKeyAppend(backend Backend, args map[string]interface{}) error {
 		)
 	}
 
-	_, comment, _, _, err := ssh.ParseAuthorizedKey(key)
+	_, comment, _, _, err := ssh.ParseAuthorizedKey([]byte(strings.TrimSpace(string(key))))
 	if err != nil {
 		return hierr.Errorf(
-			err, "can't parse key",
+			err, "can't parse public ssh key",
 		)
 	}
 

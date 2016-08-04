@@ -45,9 +45,19 @@ func (fs *filesystem) Init() error {
 func (fs *filesystem) AddHashTable(token string, table []string) error {
 	path := filepath.Join(fs.hashTablesDir, token)
 
+	dir := filepath.Dir(path)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.MkdirAll(dir, 0700)
+		if err != nil {
+			return hierr.Errorf(
+				err, "can't create directory %s", dir,
+			)
+		}
+	}
+
 	err := ioutil.WriteFile(
 		path,
-		[]byte(strings.Join(table, "\n")),
+		[]byte(strings.Join(table, "\n")+"\n"),
 		0600,
 	)
 	if err != nil {

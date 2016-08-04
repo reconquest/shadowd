@@ -28,6 +28,7 @@ func handleTableGenerate(backend Backend, args map[string]interface{}) error {
 		lengthRaw = args["--length"].(string)
 		algorithm = args["--algorithm"].(string)
 		quiet     = args["--quiet"].(bool)
+		noconfirm = args["--no-confirm"].(bool)
 	)
 
 	err := validateToken(token)
@@ -42,16 +43,22 @@ func handleTableGenerate(backend Backend, args map[string]interface{}) error {
 
 	password, err := getPassword("Enter password: ")
 	if err != nil {
-		return err
+		return hierr.Errorf(
+			err, "can't get password",
+		)
 	}
 
-	proofPassword, err := getPassword("Retype password: ")
-	if err != nil {
-		return err
-	}
+	if !noconfirm {
+		proofPassword, err := getPassword("Retype password: ")
+		if err != nil {
+			return hierr.Errorf(
+				err, "can't get password confirmation",
+			)
+		}
 
-	if password != proofPassword {
-		return fmt.Errorf("specified passwords do not match")
+		if password != proofPassword {
+			return fmt.Errorf("specified passwords do not match")
+		}
 	}
 
 	implementation := getAlgorithmImplementation(algorithm)
@@ -64,13 +71,13 @@ func handleTableGenerate(backend Backend, args map[string]interface{}) error {
 		spinner.SetInterval(time.Millisecond * 100)
 	}
 
-	table := make([]string, length)
-	for i := 1; i <= length; i++ {
+	table := []string{}
+	for i := 0; i < length; i++ {
 		if !quiet {
 			spinner.SetStatus(
 				fmt.Sprintf(
 					"Generating hash table... %d%% ",
-					i*100/length,
+					(i+1)*100/length,
 				),
 			)
 		}
@@ -161,7 +168,9 @@ func getPassword(prompt string) (string, error) {
 	stdin := bufio.NewReader(os.Stdin)
 	password, err := stdin.ReadString('\n')
 	if err != nil {
-		return "", err
+		return "", hierr.Errorf(
+			err, "can't read stdin for password",
+		)
 	}
 
 	password = strings.TrimRight(password, "\n")

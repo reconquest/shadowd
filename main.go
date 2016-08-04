@@ -28,6 +28,7 @@ Options:
                             Password will be read from stdin.
     -n --length <size>     Generate hash-table of specified length [default: 2048].
     -a --algorithm <algo>  Use specified algorithm [default: sha256].
+    --no-confirm           Do not prompt confirmation for password.
   -C --certificate         Generate certificate pair for authenticating via HTTPS.
     -b --bytes <length>    Generate rsa key of specified length [default: 2048].
     -h --host <host>       Set specified host as trusted [default: $CERT_HOST].
@@ -111,7 +112,7 @@ func main() {
 	case args["--certificate"]:
 		err = handleCertificateGenerate(backend, args)
 
-	case args["--listen"]:
+	default:
 		err = handleListen(backend, args, hashTTL)
 	}
 
