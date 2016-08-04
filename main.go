@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"math/rand"
 	"net"
@@ -51,6 +52,8 @@ Options:
   --version                Show program version.
 `
 
+var ErrNotFound = errors.New("not found")
+
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
@@ -67,7 +70,10 @@ func main() {
 		)
 	}
 
-	var backend Backend
+	var (
+		useBackend string
+		backend    Backend
+	)
 
 	if path, ok := args["--config"].(string); ok {
 		config, err := getConfig(path)
@@ -77,22 +83,24 @@ func main() {
 			)
 		}
 
-		if config.Backend.Use == "mongodb" {
-			backend, err = newMongoDB(config.Backend.Path)
-			if err != nil {
-				hierr.Fatalf(
-					err, "can't initialize mongodb backend",
-				)
-			}
-		}
+		useBackend = config.Backend.Use
 	}
 
-	if backend == nil {
+	switch useBackend {
+	case "", "filesystem":
 		backend = &filesystem{
 			hashTablesDir: args["--tables"].(string),
 			sshKeysDir:    args["--keys"].(string),
 			hashTTL:       hashTTL,
 		}
+	case "mongodb":
+		backend = &mongodb{}
+
+	default:
+		hierr.Fatalf(
+			errors.New(useBackend), "unknown backend",
+		)
+
 	}
 
 	err = backend.Init()

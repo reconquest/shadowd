@@ -1,11 +1,5 @@
 package main
 
-import "errors"
-
-var (
-	ErrNotFound = errors.New("not found")
-)
-
 type Backend interface {
 	GetPublicKeys(token string) (string, error)
 	AddPublicKey(token string, key []byte, truncate bool) error
@@ -18,8 +12,4 @@ type Backend interface {
 	GetTokens(prefix string) ([]string, error)
 
 	Init() error
-}
-
-func newMongoDB(path string) (Backend, error) {
-	return nil, nil
 }
