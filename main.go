@@ -71,7 +71,8 @@ func main() {
 	}
 
 	var (
-		useBackend string
+		backendUse string
+		backendDSN string
 		backend    Backend
 	)
 
@@ -83,10 +84,11 @@ func main() {
 			)
 		}
 
-		useBackend = config.Backend.Use
+		backendUse = config.Backend.Use
+		backendDSN = config.Backend.DSN
 	}
 
-	switch useBackend {
+	switch backendUse {
 	case "", "filesystem":
 		backend = &filesystem{
 			hashTablesDir: args["--tables"].(string),
@@ -94,11 +96,14 @@ func main() {
 			hashTTL:       hashTTL,
 		}
 	case "mongodb":
-		backend = &mongodb{}
+		backend = &mongodb{
+			dsn:     backendDSN,
+			hashTTL: hashTTL,
+		}
 
 	default:
 		hierr.Fatalf(
-			errors.New(useBackend), "unknown backend",
+			errors.New(backendUse), "unknown backend",
 		)
 
 	}

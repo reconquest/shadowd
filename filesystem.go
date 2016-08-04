@@ -101,7 +101,7 @@ func (fs *filesystem) AddPublicKey(
 
 	defer keyFile.Close()
 
-	_, err = keyFile.Write(key)
+	_, err = keyFile.Write(append(key, []byte("\n")...))
 	if err != nil {
 		return hierr.Errorf(
 			err, "can't write key file %s", path,

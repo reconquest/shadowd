@@ -4,8 +4,8 @@ import "github.com/kovetskiy/ko"
 
 type config struct {
 	Backend struct {
-		Use  string `toml:"use" required:"true"`
-		Path string `toml:"path" required:"true"`
+		Use string `toml:"use" required:"true"`
+		DSN string `toml:"dsn" required:"true"`
 	} `toml:"backend" required:"true"`
 }
 

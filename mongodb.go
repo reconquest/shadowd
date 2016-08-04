@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -17,7 +18,7 @@ type mongodb struct {
 	hashTTL  time.Duration
 	session  *mgo.Session
 	database *mgo.Database
-	hashes   *mgo.Collection
+	shadows  *mgo.Collection
 	keys     *mgo.Collection
 	clients  *mgo.Collection
 }
@@ -62,7 +63,7 @@ func (db *mongodb) AddPublicKey(
 }
 
 func (db *mongodb) AddHashTable(token string, table []string) error {
-	_, err := db.hashes.RemoveAll(bson.M{"token": token})
+	_, err := db.shadows.RemoveAll(bson.M{"token": token})
 	if err != nil {
 		return hierr.Errorf(
 			err, "can't remove existing hash table",
@@ -77,7 +78,7 @@ func (db *mongodb) AddHashTable(token string, table []string) error {
 		})
 	}
 
-	err = db.hashes.Insert(docs...)
+	err = db.shadows.Insert(docs...)
 	if err != nil {
 		return hierr.Errorf(
 			err, "can't insert table hash to database",
@@ -89,7 +90,7 @@ func (db *mongodb) AddHashTable(token string, table []string) error {
 
 func (db *mongodb) IsHashExists(token string, hash string) (bool, error) {
 	var doc map[string]interface{}
-	err := db.hashes.Find(bson.M{"token": token, "hash": hash}).One(&doc)
+	err := db.shadows.Find(bson.M{"token": token, "hash": hash}).One(&doc)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			return false, nil
@@ -103,7 +104,7 @@ func (db *mongodb) IsHashExists(token string, hash string) (bool, error) {
 
 func (db *mongodb) GetHash(token string, number int64) (string, error) {
 	var doc map[string]interface{}
-	err := db.hashes.Find(
+	err := db.shadows.Find(
 		bson.M{"token": token},
 	).Skip(int(number - int64(1))).Limit(1).One(&doc)
 	if err != nil {
@@ -145,7 +146,7 @@ func (db *mongodb) AddRecentClient(identifier string) error {
 }
 
 func (db *mongodb) GetTableSize(token string) (int64, error) {
-	count, err := db.hashes.Find(bson.M{"token": token}).Count()
+	count, err := db.shadows.Find(bson.M{"token": token}).Count()
 	if err != nil {
 		return 0, hierr.Errorf(
 			err, "can't obtain table size from database",
@@ -160,22 +161,25 @@ func (db *mongodb) GetTableSize(token string) (int64, error) {
 }
 
 func (db *mongodb) GetTokens(prefix string) ([]string, error) {
-	var docs []map[string]interface{}
-	err := db.hashes.Find(
-		bson.M{"token": bson.M{"$regex": regexp.QuoteMeta(prefix) + "/.*"}},
-	).Select(bson.M{"token": 1}).All(&docs)
+	var docs []string
+	err := db.shadows.Find(
+		bson.M{
+			"token": bson.M{"$regex": "^" + regexp.QuoteMeta(prefix) + ".*"},
+		},
+	).Select(bson.M{"token": 1}).Distinct("token", &docs)
 	if err != nil {
 		return nil, hierr.Errorf(
 			err, "can't obtain tokens from database",
 		)
 	}
 
-	tokens := []string{}
-	for _, doc := range docs {
-		tokens = append(tokens, doc["token"].(string))
+	for i, doc := range docs {
+		docs[i] = strings.TrimPrefix(doc, prefix)
 	}
 
-	return tokens, nil
+	sort.Strings(docs)
+
+	return docs, nil
 }
 
 func (db *mongodb) Init() error {
@@ -202,7 +206,6 @@ func (db *mongodb) Init() error {
 }
 
 func (db *mongodb) connect() error {
-	var err error
 	session, err := mgo.Dial(db.dsn)
 	if err != nil {
 		return err
@@ -211,8 +214,9 @@ func (db *mongodb) connect() error {
 	db.session = session
 
 	db.database = db.session.DB("")
-	db.hashes = db.database.C("hashes")
+	db.shadows = db.database.C("shadows")
 	db.keys = db.database.C("keys")
+	db.clients = db.database.C("clients")
 
 	return nil
 }
