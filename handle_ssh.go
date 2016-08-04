@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -50,7 +51,9 @@ func handleSSHKeyAppend(backend Backend, args map[string]interface{}) error {
 		)
 	}
 
-	_, comment, _, _, err := ssh.ParseAuthorizedKey([]byte(strings.TrimSpace(string(key))))
+	key = bytes.TrimSpace(key)
+
+	_, comment, _, _, err := ssh.ParseAuthorizedKey(key)
 	if err != nil {
 		return hierr.Errorf(
 			err, "can't parse public ssh key",
