@@ -197,6 +197,24 @@ standard `-K` invocation.
 
 **shadowd** will serve that keys by HTTP, as mentioned in following section.
 
+### Scalability
+
+**shadowd** can work in multiple instance mode, but it requires to use external
+storage &ndash; MongoDB.
+
+**shadowd** will store/read shadow entries and public ssh key from mongodb, so
+all of your need is configure mongodb cluster, setup replication and place
+shadowd configuration file using following syntax:
+
+```
+[backend]
+use = "mongodb"
+dsn = "mongodb://[user[:password]@]host[,[user2[:password2]@]host2]/dbname"
+```
+
+**shadowd**'s' configuration file can be specified using `-f --config <path>`
+flag.
+
 ### REST API
 
 **shadowd** offers following REST API:
