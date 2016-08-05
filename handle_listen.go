@@ -14,12 +14,12 @@ import (
 	"github.com/seletskiy/hierr"
 )
 
-type HashTableHandler struct {
+type Server struct {
 	backend Backend
 	hashTTL time.Duration
 }
 
-func (handler *HashTableHandler) ServeHTTP(
+func (server *Server) HandleTokens(
 	writer http.ResponseWriter, request *http.Request,
 ) {
 	// no need to validate token because net/http package will validate request
@@ -27,7 +27,7 @@ func (handler *HashTableHandler) ServeHTTP(
 	token := strings.TrimPrefix(request.URL.Path, "/t/")
 
 	if strings.HasSuffix(token, "/") || token == "" {
-		tokens, err := handler.backend.GetTokens(token)
+		tokens, err := server.backend.GetTokens(token)
 		if err != nil {
 			log.Println(
 				hierr.Errorf(
@@ -58,7 +58,7 @@ func (handler *HashTableHandler) ServeHTTP(
 		return
 	}
 
-	tableSize, err := handler.backend.GetTableSize(token)
+	tableSize, err := server.backend.GetTableSize(token)
 	if err != nil {
 		log.Println(err)
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -70,7 +70,7 @@ func (handler *HashTableHandler) ServeHTTP(
 
 	// in case of client requested shadow entry not too long ago,
 	// we should send different entry on further invocations
-	recent, err := handler.backend.IsRecentClient(remote)
+	recent, err := server.backend.IsRecentClient(remote)
 	if err != nil {
 		log.Println(err)
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -80,7 +80,7 @@ func (handler *HashTableHandler) ServeHTTP(
 	if recent {
 		remote += "-next"
 	} else {
-		err = handler.backend.AddRecentClient(remote)
+		err = server.backend.AddRecentClient(remote)
 		if err != nil {
 			log.Println(err)
 			writer.WriteHeader(http.StatusInternalServerError)
@@ -91,7 +91,7 @@ func (handler *HashTableHandler) ServeHTTP(
 	hash := sha256.Sum256([]byte(
 		fmt.Sprintf(
 			"%s%d",
-			remote, time.Now().Unix()/int64(handler.hashTTL/time.Second),
+			remote, time.Now().Unix()/int64(server.hashTTL/time.Second),
 		),
 	))
 
@@ -113,7 +113,7 @@ func (handler *HashTableHandler) ServeHTTP(
 		big.NewInt(hashIndex), big.NewInt(tableSize),
 	).Int64()
 
-	record, err := handler.backend.GetHash(token, remainder)
+	record, err := server.backend.GetHash(token, remainder)
 	if err != nil {
 		writer.Write([]byte(err.Error()))
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -128,18 +128,14 @@ func handleListen(
 	args map[string]interface{},
 	hashTTL time.Duration,
 ) error {
-	http.Handle("/v/", &HashValidatorHandler{
-		backend: backend,
-	})
-
-	http.Handle("/t/", &HashTableHandler{
+	wood := &Server{
 		backend: backend,
 		hashTTL: hashTTL,
-	})
+	}
 
-	http.Handle("/ssh/", &SSHKeysHandler{
-		backend: backend,
-	})
+	http.HandleFunc("/v/", wood.HandleValidate)
+	http.HandleFunc("/t/", wood.HandleTokens)
+	http.HandleFunc("/ssh/", wood.HandleSSH)
 
 	var (
 		certFile = filepath.Join(args["--certs"].(string), "cert.pem")
