@@ -6,11 +6,7 @@ import (
 	"strings"
 )
 
-type HashValidatorHandler struct {
-	backend Backend
-}
-
-func (handler *HashValidatorHandler) ServeHTTP(
+func (server *Server) HandleValidate(
 	response http.ResponseWriter, request *http.Request,
 ) {
 	path := strings.TrimPrefix(request.URL.Path, "/v/")
@@ -32,7 +28,7 @@ func (handler *HashValidatorHandler) ServeHTTP(
 		hash, token,
 	)
 
-	exists, err := handler.backend.IsHashExists(token, hash)
+	exists, err := server.backend.IsHashExists(token, hash)
 	if err != nil {
 		log.Println(err)
 		response.WriteHeader(http.StatusInternalServerError)

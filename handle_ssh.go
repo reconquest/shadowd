@@ -14,16 +14,12 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-type SSHKeysHandler struct {
-	backend Backend
-}
-
-func (handler *SSHKeysHandler) ServeHTTP(
+func (server *Server) HandleSSH(
 	writer http.ResponseWriter, request *http.Request,
 ) {
 	token := strings.TrimPrefix(request.URL.Path, "/ssh/")
 
-	keys, err := handler.backend.GetPublicKeys(token)
+	keys, err := server.backend.GetPublicKeys(token)
 	if err != nil {
 		if err == ErrNotFound {
 			writer.WriteHeader(http.StatusNotFound)
