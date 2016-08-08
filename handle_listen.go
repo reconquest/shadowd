@@ -175,7 +175,7 @@ func (server *Server) handlePasswordChange(
 		return
 	}
 
-	proofs, ok := request.Form["hash"]
+	proofs, ok := request.Form["hash[]"]
 	if !ok || len(proofs) != passwordChangeSaltAmount {
 		fmt.Fprintln(writer, strings.Join(salts, "\n"))
 		return
@@ -200,6 +200,7 @@ func (server *Server) handlePasswordChange(
 
 	log.Printf(
 		"password change for %s accepted, generating new hash table...",
+		token,
 	)
 
 	table := []string{}
