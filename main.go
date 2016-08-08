@@ -1,18 +1,20 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"log"
 	"math/rand"
 	"net"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/docopt/docopt-go"
+	"github.com/seletskiy/hierr"
 )
 
-var version = `2.2`
+var version = `3.0`
 var usage = `shadowd, secure login distribution service
 
 Usage:
@@ -28,6 +30,7 @@ Options:
                             Password will be read from stdin.
     -n --length <size>     Generate hash-table of specified length [default: 2048].
     -a --algorithm <algo>  Use specified algorithm [default: sha256].
+    --no-confirm           Do not prompt confirmation for password.
   -C --certificate         Generate certificate pair for authenticating via HTTPS.
     -b --bytes <length>    Generate rsa key of specified length [default: 2048].
     -h --host <host>       Set specified host as trusted [default: $CERT_HOST].
@@ -44,10 +47,13 @@ Options:
                             [default: /var/shadowd/cert/].
   -k --keys <dir>          Use specified dir for reading public SSH keys.
                             [default: /var/shadowd/ssh/].
+  -f --config <path>       Use specified configuration file.
   -q --quiet               Quiet mode, be less chatty.
   --help                   Show this screen.
   --version                Show program version.
 `
+
+var ErrNotFound = errors.New("not found")
 
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
@@ -58,16 +64,72 @@ func main() {
 		replaceDefaults(usage), nil, true, "shadowd "+version, false,
 	)
 
-	var err error
+	hashTTL, err := time.ParseDuration(args["--ttl"].(string))
+	if err != nil {
+		hierr.Fatalf(
+			err, "can't parse ttl time",
+		)
+	}
+
+	var (
+		backendUse string
+		backendDSN string
+		backend    Backend
+	)
+
+	if path, ok := args["--config"].(string); ok {
+		config, err := getConfig(path)
+		if err != nil {
+			hierr.Fatalf(
+				err, "can't parse configuration file",
+			)
+		}
+
+		backendUse = config.Backend.Use
+		backendDSN = config.Backend.DSN
+	}
+
+	switch backendUse {
+	case "", "filesystem":
+		backend = &filesystem{
+			hashTablesDir: args["--tables"].(string),
+			sshKeysDir:    args["--keys"].(string),
+			hashTTL:       hashTTL,
+			clients:       map[string]time.Time{},
+			clientsLock:   &sync.Mutex{},
+		}
+	case "mongodb":
+		backend = &mongodb{
+			dsn:     backendDSN,
+			hashTTL: hashTTL,
+		}
+
+	default:
+		hierr.Fatalf(
+			errors.New(backendUse), "unknown backend",
+		)
+
+	}
+
+	err = backend.Init()
+	if err != nil {
+		hierr.Fatalf(
+			err, "can't initialize shadowd backend",
+		)
+	}
+
 	switch {
 	case args["--generate"]:
-		err = handleTableGenerate(args)
+		err = handleTableGenerate(backend, args)
+
 	case args["--key"]:
-		err = handleSSHKeyAppend(args)
+		err = handleSSHKeyAppend(backend, args)
+
 	case args["--certificate"]:
-		err = handleCertificateGenerate(args)
+		err = handleCertificateGenerate(backend, args)
+
 	default:
-		err = handleListen(args)
+		err = handleListen(backend, args, hashTTL)
 	}
 
 	if err != nil {
@@ -85,7 +147,7 @@ func replaceDefaultCertHost(usage string) string {
 }
 
 func replaceDefaultCertAddr(usage string) string {
-	return strings.Replace(usage, "$CERT_ADDR", getLocalIpAddress(), -1)
+	return strings.Replace(usage, "$CERT_ADDR", getLocalIP(), -1)
 }
 
 func replaceDefaultCertValidTill(usage string) string {
@@ -104,7 +166,7 @@ func replaceDefaults(usage string) string {
 	return usage
 }
 
-func getLocalIpAddress() string {
+func getLocalIP() string {
 	interfaces, err := net.Interfaces()
 	if err != nil {
 		panic(err)
@@ -117,9 +179,9 @@ func getLocalIpAddress() string {
 		}
 
 		for _, address := range adresses {
-			switch ipAddress := address.(type) {
+			switch addr := address.(type) {
 			case *net.IPNet:
-				ipString := fmt.Sprint(ipAddress.IP)
+				ipString := addr.IP.String()
 				if strings.HasPrefix(ipString, "127.") || ipString == "::1" {
 					continue
 				} else {
