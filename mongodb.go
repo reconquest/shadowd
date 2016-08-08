@@ -243,7 +243,11 @@ func (db *mongodb) ensureConnection() {
 
 func (db *mongodb) cleanupRecentClients() {
 	_, err := db.clients.RemoveAll(
-		bson.M{"create_date": bson.M{"$lt": time.Now().Unix() - int64(db.hashTTL)}},
+		bson.M{
+			"create_date": bson.M{
+				"$lt": time.Now().Unix() - int64(db.hashTTL),
+			},
+		},
 	)
 	if err != nil {
 		log.Println(

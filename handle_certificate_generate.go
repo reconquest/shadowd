@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/seletskiy/hierr"
 )
 
 func handleCertificateGenerate(
@@ -85,12 +87,16 @@ func handleCertificateGenerate(
 		rand.Reader, &cert, &cert, &privateKey.PublicKey, privateKey,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create certificate: %s", err)
+		return hierr.Errorf(
+			err, "can't create certificate",
+		)
 	}
 
 	certOutFd, err := os.Create(filepath.Join(certsDir, "cert.pem"))
 	if err != nil {
-		return fmt.Errorf("failed to create cert file: %s", err)
+		return hierr.Errorf(
+			err, "can't create certificate file",
+		)
 	}
 
 	err = pem.Encode(
@@ -101,12 +107,16 @@ func handleCertificateGenerate(
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to write to cert file: %s", err)
+		return hierr.Errorf(
+			err, "can't write PEM data to certificate file",
+		)
 	}
 
 	err = certOutFd.Close()
 	if err != nil {
-		return fmt.Errorf("failed to close cert file: %s", err)
+		return hierr.Errorf(
+			err, "can't close certificate file",
+		)
 	}
 
 	keyOutFd, err := os.OpenFile(
@@ -115,7 +125,9 @@ func handleCertificateGenerate(
 		0600,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create key file: %s", err)
+		return hierr.Errorf(
+			err, "can't open key file",
+		)
 	}
 
 	err = pem.Encode(
@@ -126,12 +138,16 @@ func handleCertificateGenerate(
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to write to key file: %s", err)
+		return hierr.Errorf(
+			err, "can't write PEM data to key file",
+		)
 	}
 
 	err = keyOutFd.Close()
 	if err != nil {
-		return fmt.Errorf("failed to close key file: %s", err)
+		return hierr.Errorf(
+			err, "can't close key file",
+		)
 	}
 
 	return nil
