@@ -100,9 +100,9 @@ func (server *Server) handleHashRetrieve(
 		return
 	}
 
-	if recent {
-		remote += "-next"
-	} else {
+	modifier := 1
+	if !recent {
+		modifier = 0
 		err = server.backend.AddRecentClient(remote)
 		if err != nil {
 			log.Println(err)
@@ -113,7 +113,7 @@ func (server *Server) handleHashRetrieve(
 
 	record, err := server.backend.GetHash(
 		token,
-		hashNumber(remote, tableSize, server.hashTTL),
+		hashNumber(remote, tableSize, server.hashTTL, modifier),
 	)
 	if err != nil {
 		writer.Write([]byte(err.Error()))
@@ -142,14 +142,14 @@ func (server *Server) handlePasswordChange(
 	}
 
 	remote := request.RemoteAddr[:strings.LastIndex(request.RemoteAddr, ":")]
-	remote += "-" + token
+	remote += "-" + token + "-salt-"
 
 	salts := []string{}
 	hashes := []string{}
 	for i := 0; i < passwordChangeSaltAmount; i++ {
 		hash, err := server.backend.GetHash(
 			token,
-			hashNumber(remote+"-"+fmt.Sprint(i), tableSize, server.hashTTL),
+			hashNumber(remote, tableSize, server.hashTTL, i),
 		)
 		if err != nil {
 			log.Println(err)
@@ -224,7 +224,9 @@ func (server *Server) handlePasswordChange(
 	)
 }
 
-func hashNumber(source string, max int64, ttl time.Duration) int64 {
+func hashNumber(
+	source string, max int64, ttl time.Duration, modifier int,
+) int64 {
 	hash := sha256.Sum256([]byte(
 		fmt.Sprintf(
 			"%s%d",
@@ -246,13 +248,15 @@ func hashNumber(source string, max int64, ttl time.Duration) int64 {
 		hashIndex += hashMaxLength * int64(hashByte)
 	}
 
-	mod := max
-	if mod%10 == 0 {
-		mod = max - 1
+	hashIndex += int64(modifier)
+
+	modMax := max
+	if modMax%10 == 0 {
+		modMax = max - 1
 	}
 
 	number := big.NewInt(0).Mod(
-		big.NewInt(hashIndex), big.NewInt(mod),
+		big.NewInt(hashIndex), big.NewInt(modMax),
 	).Int64()
 
 	return number
