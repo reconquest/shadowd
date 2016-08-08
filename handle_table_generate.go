@@ -20,6 +20,16 @@ import (
 // #include <crypt.h>
 import "C"
 
+var (
+	saltSymbols = []rune(
+		"qwertyuiopasdfghjklzxcvbnm" +
+			"QWERTYUIOPASDFGHJKLZXCVBNM" +
+			"0123456789" +
+			"./",
+	)
+	saltLength = 16
+)
+
 type AlgorithmImplementation func(token string) string
 
 func handleTableGenerate(backend Backend, args map[string]interface{}) error {
@@ -107,31 +117,28 @@ func handleTableGenerate(backend Backend, args map[string]interface{}) error {
 func getAlgorithmImplementation(algorithm string) AlgorithmImplementation {
 	switch algorithm {
 	case "sha256":
-		return generateSha256
+		return generateSHA256
 	case "sha512":
-		return generateSha512
+		return generateSHA512
 	}
 
 	return nil
 }
 
-func generateSha256(password string) string {
-	shadowRecord := fmt.Sprintf("$5$%s", generateShaSalt())
-	return C.GoString(C.crypt(C.CString(password), C.CString(shadowRecord)))
+func generateSHA256(password string) string {
+	salt := fmt.Sprintf("$5$%s", generateSHASalt())
+	return C.GoString(C.crypt(C.CString(password), C.CString(salt)))
 }
 
-func generateSha512(password string) string {
-	shadowRecord := fmt.Sprintf("$6$%s", generateShaSalt())
-	return C.GoString(C.crypt(C.CString(password), C.CString(shadowRecord)))
+func generateSHA512(password string) string {
+	salt := fmt.Sprintf("$6$%s", generateSHASalt())
+	return C.GoString(C.crypt(C.CString(password), C.CString(salt)))
 }
 
-func generateShaSalt() string {
-	size := 16
-	letters := []rune("qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM")
-
-	salt := make([]rune, size)
-	for i := 0; i < size; i++ {
-		salt[i] = letters[rand.Intn(len(letters))]
+func generateSHASalt() string {
+	salt := make([]rune, saltLength)
+	for i := 0; i < saltLength; i++ {
+		salt[i] = saltSymbols[rand.Intn(len(saltSymbols))]
 	}
 
 	return string(salt)

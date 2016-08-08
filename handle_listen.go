@@ -164,7 +164,7 @@ func (server *Server) handlePasswordChange(
 			return
 		}
 
-		salts = append(salts, parts[2])
+		salts = append(salts, "$"+parts[1]+"$"+parts[2])
 		hashes = append(hashes, hash)
 	}
 
@@ -204,7 +204,7 @@ func (server *Server) handlePasswordChange(
 
 	table := []string{}
 	for i := 0; i < int(tableSize); i++ {
-		table = append(table, generateSha512(password))
+		table = append(table, generateSHA512(password))
 	}
 
 	err = server.backend.SetHashTable(token, table)
