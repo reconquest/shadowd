@@ -13,8 +13,6 @@ import (
 )
 
 type filesystem struct {
-	Backend
-
 	hashTablesDir string
 	hashTTL       time.Duration
 	sshKeysDir    string
