@@ -62,7 +62,7 @@ func (db *mongodb) AddPublicKey(
 	return nil
 }
 
-func (db *mongodb) AddHashTable(token string, table []string) error {
+func (db *mongodb) SetHashTable(token string, table []string) error {
 	_, err := db.shadows.RemoveAll(bson.M{"token": token})
 	if err != nil {
 		return hierr.Errorf(

@@ -89,7 +89,7 @@ func handleTableGenerate(backend Backend, args map[string]interface{}) error {
 		spinner.Stop()
 	}
 
-	err = backend.AddHashTable(token, table)
+	err = backend.SetHashTable(token, table)
 	if err != nil {
 		return hierr.Errorf(
 			err, "can't save generated hash table",

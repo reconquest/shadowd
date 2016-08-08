@@ -42,7 +42,7 @@ func (fs *filesystem) Init() error {
 	return nil
 }
 
-func (fs *filesystem) AddHashTable(token string, table []string) error {
+func (fs *filesystem) SetHashTable(token string, table []string) error {
 	path := filepath.Join(fs.hashTablesDir, token)
 
 	dir := filepath.Dir(path)
