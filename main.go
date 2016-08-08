@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/docopt/docopt-go"
@@ -94,6 +95,8 @@ func main() {
 			hashTablesDir: args["--tables"].(string),
 			sshKeysDir:    args["--keys"].(string),
 			hashTTL:       hashTTL,
+			clients:       map[string]time.Time{},
+			clientsLock:   &sync.Mutex{},
 		}
 	case "mongodb":
 		backend = &mongodb{

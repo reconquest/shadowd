@@ -35,7 +35,10 @@ func (handler *SSHKeysHandler) ServeHTTP(
 		return
 	}
 
-	writer.Write([]byte(keys))
+	_, err = writer.Write([]byte(keys))
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func handleSSHKeyAppend(backend Backend, args map[string]interface{}) error {

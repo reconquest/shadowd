@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/seletskiy/hierr"
@@ -18,6 +19,7 @@ type filesystem struct {
 	hashTTL       time.Duration
 	sshKeysDir    string
 	clients       map[string]time.Time
+	clientsLock   *sync.Mutex
 }
 
 func (fs *filesystem) Init() error {
@@ -147,6 +149,9 @@ func (fs *filesystem) GetTableSize(token string) (int64, error) {
 }
 
 func (fs *filesystem) IsRecentClient(identifier string) (bool, error) {
+	fs.clientsLock.Lock()
+	defer fs.clientsLock.Unlock()
+
 	if fs.clients == nil {
 		fs.clients = map[string]time.Time{}
 		return false, nil
@@ -157,6 +162,9 @@ func (fs *filesystem) IsRecentClient(identifier string) (bool, error) {
 }
 
 func (fs *filesystem) AddRecentClient(identifier string) error {
+	fs.clientsLock.Lock()
+	defer fs.clientsLock.Unlock()
+
 	if fs.clients == nil {
 		fs.clients = map[string]time.Time{}
 	}
