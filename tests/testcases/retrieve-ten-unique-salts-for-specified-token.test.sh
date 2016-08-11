@@ -13,5 +13,3 @@ SALTS
 
 tests:ensure sort \| uniq \| wc -l <<< "$salts"
 tests:assert-stdout-re '^10$'
-
-exit 1

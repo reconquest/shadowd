@@ -175,7 +175,7 @@ func (server *Server) handlePasswordChange(
 		return
 	}
 
-	proofs, ok := request.Form["hash[]"]
+	proofs, ok := request.Form["shadow[]"]
 	if !ok || len(proofs) != passwordChangeSaltAmount {
 		fmt.Fprintln(writer, strings.Join(salts, "\n"))
 		return

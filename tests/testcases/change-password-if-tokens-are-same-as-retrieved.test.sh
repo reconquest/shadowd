@@ -9,7 +9,7 @@ salts=($(cat $(tests:get-stdout-file)))
 payload="password=new"
 for salt in "${salts[@]}"; do
     tests:ensure python -c "import crypt; print(crypt.crypt('old', '\$salt'))"
-    payload="$payload&hash[]=$(cat $(tests:get-stdout-file))"
+    payload="$payload&shadow[]=$(cat $(tests:get-stdout-file))"
 done
 
 tests:ensure curl -v -X PUT -d "\$payload" -k "https://127.0.0.1:60002/t/a/b/c/d"
