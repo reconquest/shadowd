@@ -237,6 +237,9 @@ func (fs *filesystem) GetTokens(prefix string) ([]string, error) {
 }
 
 func (fs *filesystem) cleanupRecentClients() {
+	fs.clientsLock.Lock()
+	defer fs.clientsLock.Unlock()
+
 	actual := map[string]time.Time{}
 
 	for identifier, requestTime := range fs.clients {
