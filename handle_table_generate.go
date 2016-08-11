@@ -164,7 +164,9 @@ func getPassword(prompt string) (string, error) {
 
 	err := sttyEchoDisable.Run()
 	if err != nil {
-		return "", err
+		return "", hierr.Errorf(
+			err, "%q", sttyEchoDisable.Args,
+		)
 	}
 
 	defer func() {
