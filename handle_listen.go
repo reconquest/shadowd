@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/seletskiy/hierr"
+	"github.com/reconquest/hierr-go"
 )
 
 const (

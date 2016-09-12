@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/seletskiy/hierr"
+	"github.com/reconquest/hierr-go"
 
 	"golang.org/x/crypto/ssh"
 )

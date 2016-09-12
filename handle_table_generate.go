@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/kovetskiy/spinner-go"
-	"github.com/seletskiy/hierr"
+	"github.com/reconquest/hierr-go"
 )
 
 // #cgo LDFLAGS: -lcrypt

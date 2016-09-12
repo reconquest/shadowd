@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/seletskiy/hierr"
+	"github.com/reconquest/hierr-go"
 )
 
 type filesystem struct {

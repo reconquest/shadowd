@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/seletskiy/hierr"
+	"github.com/reconquest/hierr-go"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"

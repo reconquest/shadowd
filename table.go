@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/seletskiy/hierr"
+	"github.com/reconquest/hierr-go"
 )
 
 type hashTable struct {
