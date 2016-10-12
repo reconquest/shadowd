@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/seletskiy/hierr"
+	"github.com/reconquest/hierr-go"
 )
 
 type hashTable struct {
@@ -50,7 +50,8 @@ func (table *hashTable) getRecord(number int64) ([]byte, error) {
 	}
 
 	var (
-		offset = number * int64(recordSize)
+		// +1 for new line
+		offset = number * int64(recordSize+1)
 		record = make([]byte, recordSize)
 	)
 
@@ -95,9 +96,9 @@ func (table *hashTable) getRecordSize() (int, error) {
 		return 0, err
 	}
 
-	recordSize := len(line) + 1
+	table.recordSize = len(line)
 
-	return recordSize, nil
+	return table.recordSize, nil
 }
 
 func (table *hashTable) getSize() (int64, error) {
@@ -119,7 +120,7 @@ func (table *hashTable) getSize() (int64, error) {
 		)
 	}
 
-	size := stat.Size() / int64(recordSize)
+	table.size = stat.Size() / int64(recordSize)
 
-	return size, nil
+	return table.size, nil
 }

@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/seletskiy/hierr"
+	"github.com/reconquest/hierr-go"
 )
 
 func handleCertificateGenerate(

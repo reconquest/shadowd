@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/docopt/docopt-go"
-	"github.com/seletskiy/hierr"
+	"github.com/reconquest/hierr-go"
 )
 
 var version = `3.0`
