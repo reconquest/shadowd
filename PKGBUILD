@@ -7,7 +7,10 @@ arch=('i686' 'x86_64')
 license=('GPL')
 makedepends=('go')
 
-source=("git://github.com/reconquest/shadowd.git" "shadowd.service")
+source=(
+    "git://github.com/reconquest/shadowd.git#branch=${BRANCH:-master}"
+    "shadowd.service"
+)
 md5sums=('SKIP' 'SKIP')
 backup=()
 
