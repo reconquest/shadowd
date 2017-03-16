@@ -61,7 +61,6 @@ func handleCertificateGenerate(
 	cert := x509.Certificate{
 		IsCA: true,
 
-		Subject:      pkix.Name{},
 		SerialNumber: serialNumber,
 
 		NotBefore: invalidBefore,
@@ -74,6 +73,10 @@ func handleCertificateGenerate(
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 
 		DNSNames: hosts,
+
+		Subject: pkix.Name{
+			CommonName: "shadowd",
+		},
 	}
 
 	for _, address := range addresses {
