@@ -120,7 +120,8 @@ func (table *hashTable) getSize() (int64, error) {
 		)
 	}
 
-	table.size = stat.Size() / int64(recordSize)
+	// +1 for new line symbol in the end of the line
+	table.size = stat.Size() / int64(recordSize+1)
 
 	return table.size, nil
 }
