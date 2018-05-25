@@ -50,7 +50,8 @@ func (table *hashTable) getRecord(number int64) ([]byte, error) {
 	}
 
 	var (
-		offset = number * int64(recordSize)
+		// +1 for new line
+		offset = number * int64(recordSize+1)
 		record = make([]byte, recordSize)
 	)
 
@@ -95,8 +96,7 @@ func (table *hashTable) getRecordSize() (int, error) {
 		return 0, err
 	}
 
-	// +1 for new line
-	table.recordSize = len(line) + 1
+	table.recordSize = len(line)
 
 	return table.recordSize, nil
 }
