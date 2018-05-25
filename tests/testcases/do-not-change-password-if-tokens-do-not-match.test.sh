@@ -13,4 +13,4 @@ for salt in "${salts[@]}"; do
 done
 
 tests:ensure curl -v -X PUT -d "\$payload" -k "https://127.0.0.1:60002/t/a/b/c/d"
-tests:assert-stderr '400 Bad Request'
+tests:assert-stderr-re '400 Bad Request|HTTP/2 400'

@@ -13,7 +13,7 @@ for salt in "${salts[@]}"; do
 done
 
 tests:ensure curl -v -X PUT -d "\$payload" -k "https://127.0.0.1:60002/t/a/b/c/d"
-tests:assert-stderr '200 OK'
+tests:assert-stderr-re '200 OK|HTTP/2 200'
 
 tests:ensure curl -v -k "https://127.0.0.1:60002/t/a/b/c/d"
 
